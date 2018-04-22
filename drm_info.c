@@ -17,6 +17,44 @@
 #define L_LAST "└───"
 #define L_GAP  "    "
 
+static void print_client_cap(int fd, uint64_t name, const char *str)
+{
+	printf(L_LINE L_VAL);
+
+	if (drmSetClientCap(fd, name, 1) == 0)
+		printf("%s supported\n", str);
+	else
+		printf("%s not supported\n", str);
+}
+
+#define print_client_cap(fd, name) print_client_cap(fd, name, #name)
+
+static void print_cap_bool(int fd, bool last, uint64_t name, const char *str)
+{
+	printf(last ? L_LINE L_LAST : L_LINE L_VAL);
+
+	uint64_t cap;
+	if (drmGetCap(fd, name, &cap) == 0)
+		printf("%s supported\n", str);
+	else
+		printf("%s not supported\n", str);
+}
+
+#define print_cap_bool(fd, last, name) print_cap_bool(fd, last, name, #name)
+
+static void print_cap_val(int fd, bool last, uint64_t name, const char *str)
+{
+	printf(last ? L_LINE L_LAST : L_LINE L_VAL);
+
+	uint64_t cap;
+	if (drmGetCap(fd, name, &cap) == 0)
+		printf("%s = %"PRIu64"\n", str, cap);
+	else
+		printf("%s not supported\n", str);
+}
+
+#define print_cap_val(fd, last, name) print_cap_val(fd, last, name, #name)
+
 static void driver_info(int fd)
 {
 	drmVersion *ver = drmGetVersion(fd);
@@ -30,16 +68,33 @@ static void driver_info(int fd)
 
 	drmFreeVersion(ver);
 
-	int ret;
+	print_client_cap(fd, DRM_CLIENT_CAP_STEREO_3D);
+	print_client_cap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES);
+	print_client_cap(fd, DRM_CLIENT_CAP_ATOMIC);
 
-	ret = drmSetClientCap(fd, DRM_CLIENT_CAP_STEREO_3D, 1);
-	printf(L_LINE L_VAL "DRM_CLIENT_CAP_STEREO_3D%s supported\n", ret == 0 ? "" : " not");
+	print_cap_bool(fd, false, DRM_CAP_DUMB_BUFFER);
+	print_cap_bool(fd, false, DRM_CAP_VBLANK_HIGH_CRTC);
+	print_cap_val(fd, false, DRM_CAP_DUMB_PREFERRED_DEPTH);
+	print_cap_bool(fd, false, DRM_CAP_DUMB_PREFER_SHADOW);
 
-	ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
-	printf(L_LINE L_VAL "DRM_CLIENT_CAP_UNIVERSAL_PLANES%s supported\n", ret == 0 ? "" : " not");
+	// Print PRIME support specially, because format is different
+	uint64_t cap;
+	if (drmGetCap(fd, DRM_CAP_PRIME, &cap) == 0) {
+		printf(L_LINE L_VAL "DRM_CAP_PRIME supported\n");
+		printf(L_LINE L_LINE L_VAL "DRM_PRIME_CAP_IMPORT%s supported\n",
+			cap & DRM_PRIME_CAP_IMPORT ? "" : "not");
+		printf(L_LINE L_LINE L_LAST "DRM_PRIME_CAP_EXPORT%s supported\n",
+			cap & DRM_PRIME_CAP_EXPORT ? "" : "not");
+	} else {
+		printf(L_LINE L_VAL "DRM_CAP_PRIME not supported\n");
+	}
 
-	ret = drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
-	printf(L_LINE L_LAST "DRM_CLIENT_CAP_ATOMIC%s supported\n", ret == 0 ? "" : " not");
+	print_cap_val(fd, false, DRM_CAP_CURSOR_WIDTH);
+	print_cap_val(fd, false, DRM_CAP_CURSOR_HEIGHT);
+	print_cap_bool(fd, false, DRM_CAP_ADDFB2_MODIFIERS);
+	print_cap_bool(fd, false, DRM_CAP_PAGE_FLIP_TARGET);
+	print_cap_bool(fd, false, DRM_CAP_CRTC_IN_VBLANK_EVENT);
+	print_cap_bool(fd, true, DRM_CAP_SYNCOBJ);
 }
 
 static const char *obj_str(uint32_t type)
