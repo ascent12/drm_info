@@ -161,7 +161,11 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			printf("Blob\n");
 			break;
 		case DRM_MODE_PROP_BITMASK:
-			printf("Bitmask");
+			printf("Bitmask {%s", prop->enums[0].name);
+			for (int j = 1; j < prop->count_enums; ++j)
+				printf(", %s", prop->enums[j].name);
+			printf("}");
+
 			if (immut)
 				printf(" - %#"PRIx64, props->prop_values[i]);
 			printf("\n");
