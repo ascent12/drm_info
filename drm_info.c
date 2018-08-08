@@ -302,6 +302,7 @@ static void connector_info(int fd, drmModeRes *res)
 
 		printf(L_LINE "%sConnector %d\n", last ? L_LAST : L_VAL, i);
 
+		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, conn->connector_id);
 		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE, conn_name(conn->connector_type));
 
 		bool first = true;
@@ -366,6 +367,8 @@ static void encoder_info(int fd, drmModeRes *res)
 		}
 
 		printf(L_LINE "%sEncoder %d\n", last ? L_LAST : L_VAL, i);
+
+		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, enc->encoder_id);
 		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE, encoder_str(enc->encoder_type));
 
 		printf(L_LINE "%s" L_VAL "CRTCS: ", last ? L_GAP : L_LINE);
@@ -393,6 +396,9 @@ static void crtc_info(int fd, drmModeRes *res)
 		}
 
 		printf(L_LINE "%sCRTC %d\n", last ? L_LAST : L_VAL, i);
+
+		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, crtc->crtc_id);
+
 		properties(fd, crtc->crtc_id, DRM_MODE_OBJECT_CRTC,
 			last ? L_LINE L_GAP : L_LINE L_LINE);
 
@@ -494,6 +500,7 @@ static void plane_info(int fd)
 
 		printf(L_GAP "%sPlane %"PRIu32"\n", last ? L_LAST : L_VAL, i);
 
+		printf(L_GAP "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, plane->plane_id);
 		printf(L_GAP "%s" L_VAL "CRTCS: ", last ? L_GAP : L_LINE);
 		print_bitmask(plane->possible_crtcs);
 		printf("\n");
