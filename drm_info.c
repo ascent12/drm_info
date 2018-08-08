@@ -196,20 +196,14 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			else
 				printf("%"PRIu64"]", prop->values[1]);
 
-			if (immut)
-				printf(" - %"PRIu64, props->prop_values[i]);
-			printf("\n");
+			printf(" - %"PRIu64"\n", props->prop_values[i]);
 
 			break;
 		case DRM_MODE_PROP_ENUM:
 			printf("Enum {%s", prop->enums[0].name);
 			for (int j = 1; j < prop->count_enums; ++j)
 				printf(", %s", prop->enums[j].name);
-			printf("}");
-
-			if (immut)
-				printf(" - %s", prop->enums[props->prop_values[i]].name);
-			printf("\n");
+			printf("} - %s\n", prop->enums[props->prop_values[i]].name);
 
 			break;
 		case DRM_MODE_PROP_BLOB:
@@ -219,11 +213,20 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			printf("Bitmask {%s", prop->enums[0].name);
 			for (int j = 1; j < prop->count_enums; ++j)
 				printf(", %s", prop->enums[j].name);
-			printf("}");
+			printf("} - (");
 
-			if (immut)
-				printf(" - %#"PRIx64, props->prop_values[i]);
-			printf("\n");
+			bool first = true;
+			for (int j = 0; j < prop->count_enums; ++j) {
+				if (props->prop_values[i] & (1 << j)) {
+					if (first)
+						first = false;
+					else
+						printf(" | ");
+					printf("%s", prop->enums[j].name);
+				}
+			}
+
+			printf(")\n");
 			break;
 		default:
 			break;
@@ -231,7 +234,7 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 
 		switch (flags & DRM_MODE_PROP_EXTENDED_TYPE) {
 		case DRM_MODE_PROP_OBJECT:
-			printf("Object %s\n", obj_str(prop->values[0]));
+			printf("Object %s - %"PRIu64"\n", obj_str(prop->values[0]), props->prop_values[i]);
 			break;
 		case DRM_MODE_PROP_SIGNED_RANGE:;
 			const char *low = i64_str(prop->values[0]);
@@ -247,9 +250,7 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			else
 				printf("%"PRId64"]", prop->values[1]);
 
-			if (immut)
-				printf(" - %"PRId64, (int64_t)props->prop_values[i]);
-			printf("\n");
+			printf(" - %"PRId64"\n", (int64_t)props->prop_values[i]);
 
 			break;
 		default:
@@ -300,7 +301,7 @@ static void connector_info(int fd, drmModeRes *res)
 		}
 
 		printf(L_LINE "%sConnector %d\n", last ? L_LAST : L_VAL, i);
-		
+
 		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE, conn_name(conn->connector_type));
 
 		bool first = true;
