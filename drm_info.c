@@ -263,6 +263,39 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 	drmModeFreeObjectProperties(props);
 }
 
+// The refresh rate provided by the mode itself is innacurate,
+// so we calculate it ourself.
+static int32_t refresh_rate(const drmModeModeInfo *mode) {
+	int32_t refresh = (mode->clock * 1000000LL / mode->htotal +
+		mode->vtotal / 2) / mode->vtotal;
+
+	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
+		refresh *= 2;
+
+	if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
+		refresh /= 2;
+
+	if (mode->vscan > 1)
+		refresh /= mode->vscan;
+
+	return refresh;
+}
+
+static void mode_info(const drmModeModeInfo *modes, size_t n, const char *prefix)
+{
+	if (n == 0)
+		return;
+
+	printf("%s" L_VAL "Modes\n", prefix);
+	for (size_t i = 0; i < n; ++i) {
+		bool last = i == n - 1;
+
+		printf("%s" L_LINE "%s%"PRIu16"x%"PRIu16"@%.02f\n", prefix,
+			last ? L_LAST : L_VAL, modes[i].hdisplay, modes[i].vdisplay,
+			refresh_rate(&modes[i]) / 1000.0);
+	}
+}
+
 static const char *conn_name(uint32_t type)
 {
 	switch (type) {
@@ -288,6 +321,29 @@ static const char *conn_name(uint32_t type)
 	}
 }
 
+static const char *conn_connection(drmModeConnection conn)
+{
+	switch (conn) {
+	case DRM_MODE_CONNECTED:         return "Connected";
+	case DRM_MODE_DISCONNECTED:      return "Disconnected";
+	case DRM_MODE_UNKNOWNCONNECTION: return "Unknown";
+	default:                         return "Unknown";
+	}
+}
+
+static const char *conn_subpixel(drmModeSubPixel subpixel)
+{
+	switch (subpixel) {
+	case DRM_MODE_SUBPIXEL_UNKNOWN:        return "Unknown";
+	case DRM_MODE_SUBPIXEL_HORIZONTAL_RGB: return "Horizontal RGB";
+	case DRM_MODE_SUBPIXEL_HORIZONTAL_BGR: return "Horizontal BGR";
+	case DRM_MODE_SUBPIXEL_VERTICAL_RGB:   return "Vertical RGB";
+	case DRM_MODE_SUBPIXEL_VERTICAL_BGR:   return "Vertical BGR";
+	case DRM_MODE_SUBPIXEL_NONE:           return "None";
+	default:                               return "Unknown";
+	}
+}
+
 static void connector_info(int fd, drmModeRes *res)
 {
 	printf(L_VAL "Connectors\n");
@@ -304,6 +360,8 @@ static void connector_info(int fd, drmModeRes *res)
 
 		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, conn->connector_id);
 		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE, conn_name(conn->connector_type));
+		printf(L_LINE "%s" L_VAL "Status: %s\n", last ? L_GAP : L_LINE, conn_connection(conn->connection));
+		printf(L_LINE "%s" L_VAL "Subpixel: %s\n", last ? L_GAP : L_LINE, conn_subpixel(conn->subpixel));
 
 		bool first = true;
 		printf(L_LINE "%s" L_VAL "Encoders: {", last ? L_GAP : L_LINE);
@@ -318,6 +376,7 @@ static void connector_info(int fd, drmModeRes *res)
 		}
 		printf("}\n");
 
+		mode_info(conn->modes, conn->count_modes, last ? L_LINE L_GAP : L_LINE L_LINE);
 		properties(fd, conn->connector_id, DRM_MODE_OBJECT_CONNECTOR,
 			last ? L_LINE L_GAP : L_LINE L_LINE);
 
