@@ -12,6 +12,32 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+// Defines for comaptibility with old libdrm
+
+// drm.h
+
+#ifndef DRM_CAP_CRTC_IN_VBLANK_EVENT
+#define DRM_CAP_CRTC_IN_VBLANK_EVENT 0x12
+#endif
+
+#ifndef DRM_CAP_SYNCOBJ
+#define DRM_CAP_SYNCOBJ 0x13
+#endif
+
+// drm_fourcc.h
+
+#ifndef DRM_FORMAT_R16
+#define DRM_FORMAT_R16 fourcc_code('R', '1', '6', ' ')
+#endif
+
+#ifndef DRM_FORMAT_RG1616
+#define DRM_FORMAT_RG1616 fourcc_code('R', 'G', '3', '2')
+#endif
+
+#ifndef DRM_FORMAT_GR1616
+#define DRM_FORMAT_GR1616 fourcc_code('G', 'R', '3', '2')
+#endif
+
 #define L_LINE "│   "
 #define L_VAL  "├───"
 #define L_LAST "└───"

@@ -10,5 +10,5 @@ project('drm_info', 'c',
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 executable('drm_info', 'drm_info.c',
-  dependencies: dependency('libdrm')
+  dependencies: dependency('libdrm', version: '>= 2.4.74'),
 )
