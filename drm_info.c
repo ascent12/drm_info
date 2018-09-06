@@ -229,7 +229,16 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			printf("Enum {%s", prop->enums[0].name);
 			for (int j = 1; j < prop->count_enums; ++j)
 				printf(", %s", prop->enums[j].name);
-			printf("} - %s\n", prop->enums[props->prop_values[i]].name);
+
+			int j;
+			for (j = 0; j < prop->count_enums; ++j)
+				if (prop->enums[j].value == props->prop_values[i])
+					break;
+
+			if (j == prop->count_enums)
+				printf("} - Invalid (%"PRIu64")\n", props->prop_values[i]);
+			else
+				printf("} - %s\n", prop->enums[j].name);
 
 			break;
 		case DRM_MODE_PROP_BLOB:
