@@ -252,13 +252,15 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 
 			bool first = true;
 			for (int j = 0; j < prop->count_enums; ++j) {
-				if (props->prop_values[i] & (1 << j)) {
-					if (first)
-						first = false;
-					else
-						printf(" | ");
-					printf("%s", prop->enums[j].name);
-				}
+				uint64_t val = prop->enums[j].value;
+				if ((props->prop_values[i] & val) != val)
+					continue;
+
+				if (first)
+					first = false;
+				else
+					printf(" | ");
+				printf("%s", prop->enums[j].name);
 			}
 
 			printf(")\n");
