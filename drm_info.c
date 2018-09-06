@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
@@ -222,7 +223,12 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			else
 				printf("%"PRIu64"]", prop->values[1]);
 
-			printf(" - %"PRIu64"\n", props->prop_values[i]);
+			// This is a special case, as the SRC_* properties are
+			// in 16.16 fixed point
+			if (strncmp(prop->name, "SRC_", 4) == 0)
+				printf(" - %"PRIu64"\n", props->prop_values[i] >> 16);
+			else
+				printf(" - %"PRIu64"\n", props->prop_values[i]);
 
 			break;
 		case DRM_MODE_PROP_ENUM:
