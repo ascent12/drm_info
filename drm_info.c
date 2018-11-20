@@ -175,6 +175,136 @@ static const char *i64_str(int64_t val)
 	}
 }
 
+static const char *format_str(uint32_t fmt)
+{
+	switch (fmt) {
+	case DRM_FORMAT_C8:          return "C8";
+	case DRM_FORMAT_R8:          return "R8";
+	case DRM_FORMAT_R16:         return "R16";
+	case DRM_FORMAT_RG88:        return "RG88";
+	case DRM_FORMAT_GR88:        return "GR88";
+	case DRM_FORMAT_RG1616:      return "RG1616";
+	case DRM_FORMAT_GR1616:      return "GR1616";
+	case DRM_FORMAT_RGB332:      return "RGB332";
+	case DRM_FORMAT_BGR233:      return "BGR233";
+	case DRM_FORMAT_XRGB4444:    return "XRGB4444";
+	case DRM_FORMAT_XBGR4444:    return "XBGR4444";
+	case DRM_FORMAT_RGBX4444:    return "RGBX4444";
+	case DRM_FORMAT_BGRX4444:    return "BGRX4444";
+	case DRM_FORMAT_ARGB4444:    return "ARGB4444";
+	case DRM_FORMAT_ABGR4444:    return "ABGR4444";
+	case DRM_FORMAT_RGBA4444:    return "RGBA4444";
+	case DRM_FORMAT_BGRA4444:    return "BGRA4444";
+	case DRM_FORMAT_XRGB1555:    return "XRGB1555";
+	case DRM_FORMAT_XBGR1555:    return "XBGR1555";
+	case DRM_FORMAT_RGBX5551:    return "RGBX5551";
+	case DRM_FORMAT_BGRX5551:    return "BGRX5551";
+	case DRM_FORMAT_ARGB1555:    return "ARGB1555";
+	case DRM_FORMAT_ABGR1555:    return "ABGR1555";
+	case DRM_FORMAT_RGBA5551:    return "RGBA5551";
+	case DRM_FORMAT_BGRA5551:    return "BGRA5551";
+	case DRM_FORMAT_RGB565:      return "RGB565";
+	case DRM_FORMAT_BGR565:      return "BGR565";
+	case DRM_FORMAT_RGB888:      return "RGB888";
+	case DRM_FORMAT_BGR888:      return "BGR888";
+	case DRM_FORMAT_XRGB8888:    return "XRGB8888";
+	case DRM_FORMAT_XBGR8888:    return "XBGR8888";
+	case DRM_FORMAT_RGBX8888:    return "RGBX8888";
+	case DRM_FORMAT_BGRX8888:    return "BGRX8888";
+	case DRM_FORMAT_ARGB8888:    return "ARGB8888";
+	case DRM_FORMAT_ABGR8888:    return "ABGR8888";
+	case DRM_FORMAT_RGBA8888:    return "RGBA8888";
+	case DRM_FORMAT_BGRA8888:    return "BGRA8888";
+	case DRM_FORMAT_XRGB2101010: return "XRGB2101010";
+	case DRM_FORMAT_XBGR2101010: return "XBGR2101010";
+	case DRM_FORMAT_RGBX1010102: return "RGBX1010102";
+	case DRM_FORMAT_BGRX1010102: return "BGRX1010102";
+	case DRM_FORMAT_ARGB2101010: return "ARGB2101010";
+	case DRM_FORMAT_ABGR2101010: return "ABGR2101010";
+	case DRM_FORMAT_RGBA1010102: return "RGBA1010102";
+	case DRM_FORMAT_BGRA1010102: return "BGRA1010102";
+	case DRM_FORMAT_YUYV:        return "YUYV";
+	case DRM_FORMAT_YVYU:        return "YVYU";
+	case DRM_FORMAT_UYVY:        return "UYVY";
+	case DRM_FORMAT_VYUY:        return "VYUY";
+	case DRM_FORMAT_AYUV:        return "AYUV";
+	case DRM_FORMAT_NV12:        return "NV12";
+	case DRM_FORMAT_NV21:        return "NV21";
+	case DRM_FORMAT_NV16:        return "NV16";
+	case DRM_FORMAT_NV61:        return "NV61";
+	case DRM_FORMAT_NV24:        return "NV24";
+	case DRM_FORMAT_NV42:        return "NV42";
+	case DRM_FORMAT_YUV410:      return "YUV410";
+	case DRM_FORMAT_YVU410:      return "YVU410";
+	case DRM_FORMAT_YUV411:      return "YUV411";
+	case DRM_FORMAT_YVU411:      return "YVU411";
+	case DRM_FORMAT_YUV420:      return "YUV420";
+	case DRM_FORMAT_YVU420:      return "YVU420";
+	case DRM_FORMAT_YUV422:      return "YUV422";
+	case DRM_FORMAT_YVU422:      return "YVU422";
+	case DRM_FORMAT_YUV444:      return "YUV444";
+	case DRM_FORMAT_YVU444:      return "YVU444";
+	default:                     return "Unknown";
+	}
+}
+
+static const char *modifier_str(uint64_t modifier)
+{
+	switch (modifier) {
+	case DRM_FORMAT_MOD_INVALID: return "DRM_FORMAT_MOD_INVALID";
+	case DRM_FORMAT_MOD_LINEAR: return "DRM_FORMAT_MOD_LINEAR";
+	case I915_FORMAT_MOD_X_TILED: return "I915_FORMAT_MOD_X_TILED";
+	case I915_FORMAT_MOD_Y_TILED: return "I915_FORMAT_MOD_Y_TILED";
+	case I915_FORMAT_MOD_Yf_TILED: return "I915_FORMAT_MOD_Yf_TILED";
+	case I915_FORMAT_MOD_Y_TILED_CCS: return "I915_FORMAT_MOD_Y_TILED_CCS";
+	case I915_FORMAT_MOD_Yf_TILED_CCS: return "I915_FORMAT_MOD_Yf_TILED_CSS";
+	case DRM_FORMAT_MOD_SAMSUNG_64_32_TILE: return "DRM_FORMAT_MOD_SAMSUNG_64_32_TILE";
+	case DRM_FORMAT_MOD_VIVANTE_TILED: return "DRM_FORMAT_MOD_VIVANTE_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SUPER_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED";
+	case DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED: return "DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB";
+	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED: return "DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED";
+	default: return "Unknown";
+	}
+}
+
+static void print_in_formats(int fd, uint32_t id)
+{
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, id);
+
+	struct drm_format_modifier_blob *data = blob->data;
+
+	uint32_t *fmts = (uint32_t *)
+		((char *)data + data->formats_offset);
+
+	struct drm_format_modifier *mods = (struct drm_format_modifier *)
+		((char *)data + data->modifiers_offset);
+
+	for (uint32_t i = 0; i < data->count_modifiers; ++i) {
+		bool last = i == data->count_modifiers - 1;
+
+		printf(L_LINE L_LINE L_GAP L_LINE "%s%s\n",
+				last ? L_LAST : L_VAL ,
+				modifier_str(mods[i].modifier));
+		for (uint64_t j = 0; j < 64; ++j) {
+			if (mods[i].formats & (1ull << j))
+				printf(L_LINE L_LINE L_GAP L_LINE "%s%s%s\n",
+						last ? L_GAP : L_LINE,
+						(mods[i].formats >> j) ^ 1 ? L_VAL : L_LAST,
+						format_str(fmts[j + mods[i].offset]));
+		}
+	}
+
+	drmModeFreePropertyBlob(blob);
+}
+
 static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 {
 	drmModeObjectProperties *props = drmModeObjectGetProperties(fd, id, type);
@@ -249,6 +379,8 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			break;
 		case DRM_MODE_PROP_BLOB:
 			printf("Blob\n");
+			if (strcmp(prop->name, "IN_FORMATS") == 0)
+				print_in_formats(fd, props->prop_values[i]);
 			break;
 		case DRM_MODE_PROP_BITMASK:
 			printf("Bitmask {%s", prop->enums[0].name);
@@ -505,79 +637,6 @@ static void crtc_info(int fd, drmModeRes *res)
 			last ? L_LINE L_GAP : L_LINE L_LINE);
 
 		drmModeFreeCrtc(crtc);
-	}
-}
-
-static const char *format_str(uint32_t fmt)
-{
-	switch (fmt) {
-	case DRM_FORMAT_C8:          return "C8";
-	case DRM_FORMAT_R8:          return "R8";
-	case DRM_FORMAT_R16:         return "R16";
-	case DRM_FORMAT_RG88:        return "RG88";
-	case DRM_FORMAT_GR88:        return "GR88";
-	case DRM_FORMAT_RG1616:      return "RG1616";
-	case DRM_FORMAT_GR1616:      return "GR1616";
-	case DRM_FORMAT_RGB332:      return "RGB332";
-	case DRM_FORMAT_BGR233:      return "BGR233";
-	case DRM_FORMAT_XRGB4444:    return "XRGB4444";
-	case DRM_FORMAT_XBGR4444:    return "XBGR4444";
-	case DRM_FORMAT_RGBX4444:    return "RGBX4444";
-	case DRM_FORMAT_BGRX4444:    return "BGRX4444";
-	case DRM_FORMAT_ARGB4444:    return "ARGB4444";
-	case DRM_FORMAT_ABGR4444:    return "ABGR4444";
-	case DRM_FORMAT_RGBA4444:    return "RGBA4444";
-	case DRM_FORMAT_BGRA4444:    return "BGRA4444";
-	case DRM_FORMAT_XRGB1555:    return "XRGB1555";
-	case DRM_FORMAT_XBGR1555:    return "XBGR1555";
-	case DRM_FORMAT_RGBX5551:    return "RGBX5551";
-	case DRM_FORMAT_BGRX5551:    return "BGRX5551";
-	case DRM_FORMAT_ARGB1555:    return "ARGB1555";
-	case DRM_FORMAT_ABGR1555:    return "ABGR1555";
-	case DRM_FORMAT_RGBA5551:    return "RGBA5551";
-	case DRM_FORMAT_BGRA5551:    return "BGRA5551";
-	case DRM_FORMAT_RGB565:      return "RGB565";
-	case DRM_FORMAT_BGR565:      return "BGR565";
-	case DRM_FORMAT_RGB888:      return "RGB888";
-	case DRM_FORMAT_BGR888:      return "BGR888";
-	case DRM_FORMAT_XRGB8888:    return "XRGB8888";
-	case DRM_FORMAT_XBGR8888:    return "XBGR8888";
-	case DRM_FORMAT_RGBX8888:    return "RGBX8888";
-	case DRM_FORMAT_BGRX8888:    return "BGRX8888";
-	case DRM_FORMAT_ARGB8888:    return "ARGB8888";
-	case DRM_FORMAT_ABGR8888:    return "ABGR8888";
-	case DRM_FORMAT_RGBA8888:    return "RGBA8888";
-	case DRM_FORMAT_BGRA8888:    return "BGRA8888";
-	case DRM_FORMAT_XRGB2101010: return "XRGB2101010";
-	case DRM_FORMAT_XBGR2101010: return "XBGR2101010";
-	case DRM_FORMAT_RGBX1010102: return "RGBX1010102";
-	case DRM_FORMAT_BGRX1010102: return "BGRX1010102";
-	case DRM_FORMAT_ARGB2101010: return "ARGB2101010";
-	case DRM_FORMAT_ABGR2101010: return "ABGR2101010";
-	case DRM_FORMAT_RGBA1010102: return "RGBA1010102";
-	case DRM_FORMAT_BGRA1010102: return "BGRA1010102";
-	case DRM_FORMAT_YUYV:        return "YUYV";
-	case DRM_FORMAT_YVYU:        return "YVYU";
-	case DRM_FORMAT_UYVY:        return "UYVY";
-	case DRM_FORMAT_VYUY:        return "VYUY";
-	case DRM_FORMAT_AYUV:        return "AYUV";
-	case DRM_FORMAT_NV12:        return "NV12";
-	case DRM_FORMAT_NV21:        return "NV21";
-	case DRM_FORMAT_NV16:        return "NV16";
-	case DRM_FORMAT_NV61:        return "NV61";
-	case DRM_FORMAT_NV24:        return "NV24";
-	case DRM_FORMAT_NV42:        return "NV42";
-	case DRM_FORMAT_YUV410:      return "YUV410";
-	case DRM_FORMAT_YVU410:      return "YVU410";
-	case DRM_FORMAT_YUV411:      return "YUV411";
-	case DRM_FORMAT_YVU411:      return "YVU411";
-	case DRM_FORMAT_YUV420:      return "YUV420";
-	case DRM_FORMAT_YVU420:      return "YVU420";
-	case DRM_FORMAT_YUV422:      return "YUV422";
-	case DRM_FORMAT_YVU422:      return "YVU422";
-	case DRM_FORMAT_YUV444:      return "YUV444";
-	case DRM_FORMAT_YVU444:      return "YVU444";
-	default:                     return "Unknown";
 	}
 }
 
