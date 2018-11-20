@@ -275,7 +275,7 @@ static const char *modifier_str(uint64_t modifier)
 	}
 }
 
-static void print_in_formats(int fd, uint32_t id)
+static void print_in_formats(int fd, uint32_t id, const char *prefix)
 {
 	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, id);
 
@@ -290,12 +290,14 @@ static void print_in_formats(int fd, uint32_t id)
 	for (uint32_t i = 0; i < data->count_modifiers; ++i) {
 		bool last = i == data->count_modifiers - 1;
 
-		printf(L_LINE L_LINE L_GAP L_LINE "%s%s\n",
-				last ? L_LAST : L_VAL ,
+		printf("%s%s%s\n",
+				prefix,
+				last ? L_LAST : L_VAL,
 				modifier_str(mods[i].modifier));
 		for (uint64_t j = 0; j < 64; ++j) {
 			if (mods[i].formats & (1ull << j))
-				printf(L_LINE L_LINE L_GAP L_LINE "%s%s%s\n",
+				printf("%s%s%s%s\n",
+						prefix,
 						last ? L_GAP : L_LINE,
 						(mods[i].formats >> j) ^ 1 ? L_VAL : L_LAST,
 						format_str(fmts[j + mods[i].offset]));
@@ -337,6 +339,10 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			printf(" (Immutable)");
 
 		printf(": ");
+
+		char sub_prefix[strlen(prefix) + 2 * strlen(L_VAL) + 1];
+		snprintf(sub_prefix, sizeof(sub_prefix), "%s" L_GAP "%s",
+			prefix, last ? L_GAP : L_LINE);
 
 		switch (flags & DRM_MODE_PROP_LEGACY_TYPE) {
 		case DRM_MODE_PROP_RANGE:;
@@ -380,7 +386,7 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 		case DRM_MODE_PROP_BLOB:
 			printf("Blob\n");
 			if (strcmp(prop->name, "IN_FORMATS") == 0)
-				print_in_formats(fd, props->prop_values[i]);
+				print_in_formats(fd, props->prop_values[i], sub_prefix);
 			break;
 		case DRM_MODE_PROP_BITMASK:
 			printf("Bitmask {%s", prop->enums[0].name);
