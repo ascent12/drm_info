@@ -102,6 +102,7 @@ static void driver_info(int fd)
 	print_client_cap(fd, DRM_CLIENT_CAP_STEREO_3D);
 	print_client_cap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES);
 	print_client_cap(fd, DRM_CLIENT_CAP_ATOMIC);
+	print_client_cap(fd, DRM_CLIENT_CAP_ASPECT_RATIO);
 	print_client_cap(fd, DRM_CLIENT_CAP_WRITEBACK_CONNECTORS);
 
 	print_cap_bool(fd, false, DRM_CAP_DUMB_BUFFER);
