@@ -594,6 +594,7 @@ static void connector_info(int fd, drmModeRes *res)
 		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n", last ? L_GAP : L_LINE, conn->connector_id);
 		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE, conn_name(conn->connector_type));
 		printf(L_LINE "%s" L_VAL "Status: %s\n", last ? L_GAP : L_LINE, conn_connection(conn->connection));
+		printf(L_LINE "%s" L_VAL "Physical size: %"PRIu32"x%"PRIu32" mm\n", last ? L_GAP : L_LINE, conn->mmWidth, conn->mmHeight);
 		printf(L_LINE "%s" L_VAL "Subpixel: %s\n", last ? L_GAP : L_LINE, conn_subpixel(conn->subpixel));
 
 		bool first = true;
