@@ -66,7 +66,7 @@ static void print_cap_bool(int fd, bool last, uint64_t name, const char *str)
 
 	uint64_t cap;
 	if (drmGetCap(fd, name, &cap) == 0)
-		printf("%s supported\n", str);
+		printf("%s = %s\n", str, cap ? "true" : "false");
 	else
 		printf("%s not supported\n", str);
 }
