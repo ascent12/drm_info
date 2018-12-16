@@ -114,9 +114,9 @@ static void driver_info(int fd)
 	if (drmGetCap(fd, DRM_CAP_PRIME, &cap) == 0) {
 		printf(L_LINE L_VAL "DRM_CAP_PRIME supported\n");
 		printf(L_LINE L_LINE L_VAL "DRM_PRIME_CAP_IMPORT%s supported\n",
-			cap & DRM_PRIME_CAP_IMPORT ? "" : "not");
+			cap & DRM_PRIME_CAP_IMPORT ? "" : " not");
 		printf(L_LINE L_LINE L_LAST "DRM_PRIME_CAP_EXPORT%s supported\n",
-			cap & DRM_PRIME_CAP_EXPORT ? "" : "not");
+			cap & DRM_PRIME_CAP_EXPORT ? "" : " not");
 	} else {
 		printf(L_LINE L_VAL "DRM_CAP_PRIME not supported\n");
 	}
