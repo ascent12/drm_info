@@ -469,11 +469,58 @@ static void mode_info(const drmModeModeInfo *modes, size_t n, const char *prefix
 
 	printf("%s" L_VAL "Modes\n", prefix);
 	for (size_t i = 0; i < n; ++i) {
+		const drmModeModeInfo *mode = &modes[i];
 		bool last = i == n - 1;
 
-		printf("%s" L_LINE "%s%"PRIu16"x%"PRIu16"@%.02f\n", prefix,
-			last ? L_LAST : L_VAL, modes[i].hdisplay, modes[i].vdisplay,
-			refresh_rate(&modes[i]) / 1000.0);
+		printf("%s" L_LINE "%s%"PRIu16"x%"PRIu16"@%.02f ", prefix,
+			last ? L_LAST : L_VAL, mode->hdisplay, mode->vdisplay,
+			refresh_rate(mode) / 1000.0);
+
+		if (mode->type & DRM_MODE_TYPE_BUILTIN)
+			printf("builtin ");
+		if (mode->type & DRM_MODE_TYPE_CLOCK_C)
+			printf("clock_c ");
+		if (mode->type & DRM_MODE_TYPE_CRTC_C)
+			printf("crtc_c ");
+		if (mode->type & DRM_MODE_TYPE_PREFERRED)
+			printf("preferred ");
+		if (mode->type & DRM_MODE_TYPE_DEFAULT)
+			printf("default ");
+		if (mode->type & DRM_MODE_TYPE_USERDEF)
+			printf("userdef ");
+		if (mode->type & DRM_MODE_TYPE_DRIVER)
+			printf("driver ");
+
+		if (mode->flags & DRM_MODE_FLAG_PHSYNC)
+			printf("phsync ");
+		if (mode->flags & DRM_MODE_FLAG_NHSYNC)
+			printf("nhsync ");
+		if (mode->flags & DRM_MODE_FLAG_PVSYNC)
+			printf("pvsync ");
+		if (mode->flags & DRM_MODE_FLAG_NVSYNC)
+			printf("nvsync ");
+		if (mode->flags & DRM_MODE_FLAG_INTERLACE)
+			printf("interlace ");
+		if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
+			printf("dblscan ");
+		if (mode->flags & DRM_MODE_FLAG_CSYNC)
+			printf("csync ");
+		if (mode->flags & DRM_MODE_FLAG_PCSYNC)
+			printf("pcsync ");
+		if (mode->flags & DRM_MODE_FLAG_NCSYNC)
+			printf("nvsync ");
+		if (mode->flags & DRM_MODE_FLAG_HSKEW)
+			printf("hskew ");
+		if (mode->flags & DRM_MODE_FLAG_BCAST)
+			printf("bcast ");
+		if (mode->flags & DRM_MODE_FLAG_PIXMUX)
+			printf("pixmux ");
+		if (mode->flags & DRM_MODE_FLAG_DBLCLK)
+			printf("dblclk ");
+		if (mode->flags & DRM_MODE_FLAG_CLKDIV2)
+			printf("clkdiv2 ");
+
+		printf("\n");
 	}
 }
 
