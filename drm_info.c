@@ -312,6 +312,91 @@ static void print_in_formats(int fd, uint32_t id, const char *prefix)
 	drmModeFreePropertyBlob(blob);
 }
 
+// The refresh rate provided by the mode itself is innacurate,
+// so we calculate it ourself.
+static int32_t refresh_rate(const drmModeModeInfo *mode) {
+	int32_t refresh = (mode->clock * 1000000LL / mode->htotal +
+		mode->vtotal / 2) / mode->vtotal;
+
+	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
+		refresh *= 2;
+
+	if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
+		refresh /= 2;
+
+	if (mode->vscan > 1)
+		refresh /= mode->vscan;
+
+	return refresh;
+}
+
+static void print_mode(const drmModeModeInfo *mode)
+{
+	printf("%"PRIu16"x%"PRIu16"@%.02f ", mode->hdisplay, mode->vdisplay,
+		refresh_rate(mode) / 1000.0);
+
+	if (mode->type & DRM_MODE_TYPE_BUILTIN)
+		printf("builtin ");
+	if (mode->type & DRM_MODE_TYPE_CLOCK_C)
+		printf("clock_c ");
+	if (mode->type & DRM_MODE_TYPE_CRTC_C)
+		printf("crtc_c ");
+	if (mode->type & DRM_MODE_TYPE_PREFERRED)
+		printf("preferred ");
+	if (mode->type & DRM_MODE_TYPE_DEFAULT)
+		printf("default ");
+	if (mode->type & DRM_MODE_TYPE_USERDEF)
+		printf("userdef ");
+	if (mode->type & DRM_MODE_TYPE_DRIVER)
+		printf("driver ");
+
+	if (mode->flags & DRM_MODE_FLAG_PHSYNC)
+		printf("phsync ");
+	if (mode->flags & DRM_MODE_FLAG_NHSYNC)
+		printf("nhsync ");
+	if (mode->flags & DRM_MODE_FLAG_PVSYNC)
+		printf("pvsync ");
+	if (mode->flags & DRM_MODE_FLAG_NVSYNC)
+		printf("nvsync ");
+	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
+		printf("interlace ");
+	if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
+		printf("dblscan ");
+	if (mode->flags & DRM_MODE_FLAG_CSYNC)
+		printf("csync ");
+	if (mode->flags & DRM_MODE_FLAG_PCSYNC)
+		printf("pcsync ");
+	if (mode->flags & DRM_MODE_FLAG_NCSYNC)
+		printf("nvsync ");
+	if (mode->flags & DRM_MODE_FLAG_HSKEW)
+		printf("hskew ");
+	if (mode->flags & DRM_MODE_FLAG_BCAST)
+		printf("bcast ");
+	if (mode->flags & DRM_MODE_FLAG_PIXMUX)
+		printf("pixmux ");
+	if (mode->flags & DRM_MODE_FLAG_DBLCLK)
+		printf("dblclk ");
+	if (mode->flags & DRM_MODE_FLAG_CLKDIV2)
+		printf("clkdiv2 ");
+}
+
+static void print_mode_id(int fd, uint32_t id, const char *prefix)
+{
+	if (id == 0) {
+		return;
+	}
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, id);
+
+	drmModeModeInfo *mode = blob->data;
+
+	printf("%s%s", prefix, L_LAST);
+	print_mode(mode);
+	printf("\n");
+
+	drmModeFreePropertyBlob(blob);
+}
+
 static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 {
 	drmModeObjectProperties *props = drmModeObjectGetProperties(fd, id, type);
@@ -392,6 +477,8 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 			printf("Blob\n");
 			if (strcmp(prop->name, "IN_FORMATS") == 0)
 				print_in_formats(fd, props->prop_values[i], sub_prefix);
+			else if (strcmp(prop->name, "MODE_ID") == 0)
+				print_mode_id(fd, props->prop_values[i], sub_prefix);
 			break;
 		case DRM_MODE_PROP_BITMASK:
 			printf("Bitmask {%s", prop->enums[0].name);
@@ -449,24 +536,6 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 	drmModeFreeObjectProperties(props);
 }
 
-// The refresh rate provided by the mode itself is innacurate,
-// so we calculate it ourself.
-static int32_t refresh_rate(const drmModeModeInfo *mode) {
-	int32_t refresh = (mode->clock * 1000000LL / mode->htotal +
-		mode->vtotal / 2) / mode->vtotal;
-
-	if (mode->flags & DRM_MODE_FLAG_INTERLACE)
-		refresh *= 2;
-
-	if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
-		refresh /= 2;
-
-	if (mode->vscan > 1)
-		refresh /= mode->vscan;
-
-	return refresh;
-}
-
 static void mode_info(const drmModeModeInfo *modes, size_t n, const char *prefix)
 {
 	if (n == 0)
@@ -477,54 +546,8 @@ static void mode_info(const drmModeModeInfo *modes, size_t n, const char *prefix
 		const drmModeModeInfo *mode = &modes[i];
 		bool last = i == n - 1;
 
-		printf("%s" L_LINE "%s%"PRIu16"x%"PRIu16"@%.02f ", prefix,
-			last ? L_LAST : L_VAL, mode->hdisplay, mode->vdisplay,
-			refresh_rate(mode) / 1000.0);
-
-		if (mode->type & DRM_MODE_TYPE_BUILTIN)
-			printf("builtin ");
-		if (mode->type & DRM_MODE_TYPE_CLOCK_C)
-			printf("clock_c ");
-		if (mode->type & DRM_MODE_TYPE_CRTC_C)
-			printf("crtc_c ");
-		if (mode->type & DRM_MODE_TYPE_PREFERRED)
-			printf("preferred ");
-		if (mode->type & DRM_MODE_TYPE_DEFAULT)
-			printf("default ");
-		if (mode->type & DRM_MODE_TYPE_USERDEF)
-			printf("userdef ");
-		if (mode->type & DRM_MODE_TYPE_DRIVER)
-			printf("driver ");
-
-		if (mode->flags & DRM_MODE_FLAG_PHSYNC)
-			printf("phsync ");
-		if (mode->flags & DRM_MODE_FLAG_NHSYNC)
-			printf("nhsync ");
-		if (mode->flags & DRM_MODE_FLAG_PVSYNC)
-			printf("pvsync ");
-		if (mode->flags & DRM_MODE_FLAG_NVSYNC)
-			printf("nvsync ");
-		if (mode->flags & DRM_MODE_FLAG_INTERLACE)
-			printf("interlace ");
-		if (mode->flags & DRM_MODE_FLAG_DBLSCAN)
-			printf("dblscan ");
-		if (mode->flags & DRM_MODE_FLAG_CSYNC)
-			printf("csync ");
-		if (mode->flags & DRM_MODE_FLAG_PCSYNC)
-			printf("pcsync ");
-		if (mode->flags & DRM_MODE_FLAG_NCSYNC)
-			printf("nvsync ");
-		if (mode->flags & DRM_MODE_FLAG_HSKEW)
-			printf("hskew ");
-		if (mode->flags & DRM_MODE_FLAG_BCAST)
-			printf("bcast ");
-		if (mode->flags & DRM_MODE_FLAG_PIXMUX)
-			printf("pixmux ");
-		if (mode->flags & DRM_MODE_FLAG_DBLCLK)
-			printf("dblclk ");
-		if (mode->flags & DRM_MODE_FLAG_CLKDIV2)
-			printf("clkdiv2 ");
-
+		printf("%s" L_LINE "%s", prefix, last ? L_LAST : L_VAL);
+		print_mode(mode);
 		printf("\n");
 	}
 }
