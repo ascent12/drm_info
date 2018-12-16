@@ -637,7 +637,7 @@ static void print_bitmask(uint32_t mask)
 {
 	bool first = true;
 	printf("{");
-	for (uint32_t i = 0; i < 32; ++i) {
+	for (uint32_t i = 0; i < 31; ++i) {
 		if (!(mask & (1 << i)))
 			continue;
 
