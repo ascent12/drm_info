@@ -121,6 +121,8 @@ static void driver_info(int fd)
 		printf(L_LINE L_VAL "DRM_CAP_PRIME not supported\n");
 	}
 
+	print_cap_bool(fd, false, DRM_CAP_TIMESTAMP_MONOTONIC);
+	print_cap_bool(fd, false, DRM_CAP_ASYNC_PAGE_FLIP);
 	print_cap_val(fd, false, DRM_CAP_CURSOR_WIDTH);
 	print_cap_val(fd, false, DRM_CAP_CURSOR_HEIGHT);
 	print_cap_bool(fd, false, DRM_CAP_ADDFB2_MODIFIERS);
