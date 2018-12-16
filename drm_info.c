@@ -29,6 +29,10 @@
 #define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS 5
 #endif
 
+#ifndef DRM_MODE_CONNECTOR_WRITEBACK
+#define DRM_MODE_CONNECTOR_WRITEBACK 18
+#endif
+
 // drm_fourcc.h
 
 #ifndef DRM_FORMAT_R16
@@ -550,6 +554,7 @@ static const char *conn_name(uint32_t type)
 	case DRM_MODE_CONNECTOR_VIRTUAL:     return "Virtual";
 	case DRM_MODE_CONNECTOR_DSI:         return "DSI";
 	case DRM_MODE_CONNECTOR_DPI:         return "DPI";
+	case DRM_MODE_CONNECTOR_WRITEBACK:   return "Writeback";
 	default:                             return "Unknown";
 	}
 }
