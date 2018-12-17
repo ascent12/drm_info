@@ -755,7 +755,10 @@ static void drm_info(const char *path)
 		return;
 	}
 
+	// Print driver info before getting resources, as it'll try to enable some
+	// DRM client capabilities
 	printf("Device: %s\n", path);
+	driver_info(fd);
 
 	drmModeRes *res = drmModeGetResources(fd);
 	if (!res) {
@@ -763,7 +766,6 @@ static void drm_info(const char *path)
 		return;
 	}
 
-	driver_info(fd);
 	connector_info(fd, res);
 	encoder_info(fd, res);
 	crtc_info(fd, res);
