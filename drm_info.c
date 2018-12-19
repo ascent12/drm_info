@@ -425,6 +425,35 @@ static void print_mode(const drmModeModeInfo *mode)
 		printf("256:135 ");
 		break;
 	}
+
+	switch (mode->flags & DRM_MODE_FLAG_3D_MASK) {
+	case DRM_MODE_FLAG_3D_NONE:
+		break;
+	case DRM_MODE_FLAG_3D_FRAME_PACKING:
+		printf("3d-frame-packing ");
+		break;
+	case DRM_MODE_FLAG_3D_FIELD_ALTERNATIVE:
+		printf("3d-field-alternative ");
+		break;
+	case DRM_MODE_FLAG_3D_LINE_ALTERNATIVE:
+		printf("3d-line-alternative ");
+		break;
+	case DRM_MODE_FLAG_3D_SIDE_BY_SIDE_FULL:
+		printf("3d-side-by-side-full ");
+		break;
+	case DRM_MODE_FLAG_3D_L_DEPTH:
+		printf("3d-l-depth ");
+		break;
+	case DRM_MODE_FLAG_3D_L_DEPTH_GFX_GFX_DEPTH:
+		printf("3d-l-depth-gfx-gfx-depth ");
+		break;
+	case DRM_MODE_FLAG_3D_TOP_AND_BOTTOM:
+		printf("3d-top-and-bottom ");
+		break;
+	case DRM_MODE_FLAG_3D_SIDE_BY_SIDE_HALF:
+		printf("3d-side-by-side-half ");
+		break;
+	}
 }
 
 static void print_mode_id(int fd, uint32_t id, const char *prefix)
