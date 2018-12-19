@@ -408,6 +408,23 @@ static void print_mode(const drmModeModeInfo *mode)
 		printf("dblclk ");
 	if (mode->flags & DRM_MODE_FLAG_CLKDIV2)
 		printf("clkdiv2 ");
+
+	switch (mode->flags & DRM_MODE_FLAG_PIC_AR_MASK) {
+	case DRM_MODE_FLAG_PIC_AR_NONE:
+		break;
+	case DRM_MODE_FLAG_PIC_AR_4_3:
+		printf("4:3 ");
+		break;
+	case DRM_MODE_FLAG_PIC_AR_16_9:
+		printf("16:9 ");
+		break;
+	case DRM_MODE_FLAG_PIC_AR_64_27:
+		printf("64:27 ");
+		break;
+	case DRM_MODE_FLAG_PIC_AR_256_135:
+		printf("256:135 ");
+		break;
+	}
 }
 
 static void print_mode_id(int fd, uint32_t id, const char *prefix)
