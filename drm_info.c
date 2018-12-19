@@ -377,16 +377,8 @@ static void print_mode(const drmModeModeInfo *mode)
 	printf("%"PRIu16"x%"PRIu16"@%.02f ", mode->hdisplay, mode->vdisplay,
 		refresh_rate(mode) / 1000.0);
 
-	if (mode->type & DRM_MODE_TYPE_BUILTIN)
-		printf("builtin ");
-	if (mode->type & DRM_MODE_TYPE_CLOCK_C)
-		printf("clock_c ");
-	if (mode->type & DRM_MODE_TYPE_CRTC_C)
-		printf("crtc_c ");
 	if (mode->type & DRM_MODE_TYPE_PREFERRED)
 		printf("preferred ");
-	if (mode->type & DRM_MODE_TYPE_DEFAULT)
-		printf("default ");
 	if (mode->type & DRM_MODE_TYPE_USERDEF)
 		printf("userdef ");
 	if (mode->type & DRM_MODE_TYPE_DRIVER)
@@ -412,10 +404,6 @@ static void print_mode(const drmModeModeInfo *mode)
 		printf("nvsync ");
 	if (mode->flags & DRM_MODE_FLAG_HSKEW)
 		printf("hskew ");
-	if (mode->flags & DRM_MODE_FLAG_BCAST)
-		printf("bcast ");
-	if (mode->flags & DRM_MODE_FLAG_PIXMUX)
-		printf("pixmux ");
 	if (mode->flags & DRM_MODE_FLAG_DBLCLK)
 		printf("dblclk ");
 	if (mode->flags & DRM_MODE_FLAG_CLKDIV2)
