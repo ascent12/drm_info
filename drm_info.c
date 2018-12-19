@@ -13,6 +13,8 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include "config.h"
+
 // Defines for comaptibility with old libdrm
 
 // drm.h
@@ -23,6 +25,10 @@
 
 #ifndef DRM_CAP_SYNCOBJ
 #define DRM_CAP_SYNCOBJ 0x13
+#endif
+
+#ifndef DRM_CLIENT_CAP_ASPECT_RATIO
+#define DRM_CLIENT_CAP_ASPECT_RATIO 4
 #endif
 
 #ifndef DRM_CLIENT_CAP_WRITEBACK_CONNECTORS
@@ -260,8 +266,18 @@ static const char *format_str(uint32_t fmt)
 	}
 }
 
+#if HAVE_LIBDRM_2_4_83
 static const char *modifier_str(uint64_t modifier)
 {
+	/*
+	 * ARM has a complex format which we can't be bothered to parse.
+	 */
+#if HAVE_LIBDRM_2_4_95
+	if ((modifier >> 56) == DRM_FORMAT_MOD_VENDOR_ARM) {
+		return "DRM_FORMAT_MOD_ARM_AFBC()";
+	}
+#endif
+
 	switch (modifier) {
 	case DRM_FORMAT_MOD_INVALID: return "DRM_FORMAT_MOD_INVALID";
 	case DRM_FORMAT_MOD_LINEAR: return "DRM_FORMAT_MOD_LINEAR";
@@ -271,10 +287,13 @@ static const char *modifier_str(uint64_t modifier)
 	case I915_FORMAT_MOD_Y_TILED_CCS: return "I915_FORMAT_MOD_Y_TILED_CCS";
 	case I915_FORMAT_MOD_Yf_TILED_CCS: return "I915_FORMAT_MOD_Yf_TILED_CSS";
 	case DRM_FORMAT_MOD_SAMSUNG_64_32_TILE: return "DRM_FORMAT_MOD_SAMSUNG_64_32_TILE";
+	// The following formats were added in 2.4.82, but IN_FORMATS wasn't added until 2.4.83
 	case DRM_FORMAT_MOD_VIVANTE_TILED: return "DRM_FORMAT_MOD_VIVANTE_TILED";
 	case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SUPER_TILED";
 	case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED";
 	case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED";
+	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED: return "DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED";
+#if HAVE_LIBDRM_2_4_91
 	case DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED: return "DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB";
@@ -282,7 +301,14 @@ static const char *modifier_str(uint64_t modifier)
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB";
-	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED: return "DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED";
+#endif
+#if HAVE_LIBDRM_2_4_95
+	case DRM_FORMAT_MOD_BROADCOM_SAND32: return "DRM_FORMAT_MOD_BROADCOM_SAND32";
+	case DRM_FORMAT_MOD_BROADCOM_SAND64: return "DRM_FORMAT_MOD_BROADCOM_SAND64";
+	case DRM_FORMAT_MOD_BROADCOM_SAND128: return "DRM_FORMAT_MOD_BROADCOM_SAND128";
+	case DRM_FORMAT_MOD_BROADCOM_SAND256: return "DRM_FORMAT_MOD_BROADCOM_SAND265";
+	case DRM_FORMAT_MOD_BROADCOM_UIF: return "DRM_FORMAT_MOD_BROADCOM_UIF";
+#endif
 	default: return "Unknown";
 	}
 }
@@ -318,6 +344,15 @@ static void print_in_formats(int fd, uint32_t id, const char *prefix)
 
 	drmModeFreePropertyBlob(blob);
 }
+#else
+static void print_in_formats(int fd, uint32_t id, const char *prefix)
+{
+	(void)fd;
+	(void)id;
+	(void)prefix;
+	// Do nothing
+}
+#endif
 
 // The refresh rate provided by the mode itself is innacurate,
 // so we calculate it ourself.

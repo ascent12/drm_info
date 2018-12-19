@@ -9,7 +9,23 @@ project('drm_info', 'c',
 
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
-executable('drm_info', 'drm_info.c',
-  dependencies: dependency('libdrm', version: '>= 2.4.74'),
+conf = configuration_data()
+libdrm = dependency('libdrm', version: '>= 2.4.74')
+
+# These specific versions added more modifiers, so we check for these instead
+# of using #ifdef on every single one
+foreach version: ['2.4.83', '2.4.91', '2.4.95']
+  conf.set10('HAVE_LIBDRM_' + version.underscorify(),
+    libdrm.version().version_compare('>=' + version)
+  )
+endforeach
+
+config_h = configure_file(
+  configuration: conf,
+  output: 'config.h',
+)
+
+executable('drm_info', 'drm_info.c', config_h,
+  dependencies: libdrm,
   install: true,
 )
