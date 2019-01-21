@@ -564,7 +564,7 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 
 			break;
 		case DRM_MODE_PROP_BLOB:
-			printf("Blob\n");
+			printf("Blob - %" PRIu64 "\n", props->prop_values[i]);
 			if (strcmp(prop->name, "IN_FORMATS") == 0)
 				print_in_formats(fd, props->prop_values[i], sub_prefix);
 			else if (strcmp(prop->name, "MODE_ID") == 0)
