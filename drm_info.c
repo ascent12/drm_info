@@ -487,6 +487,18 @@ static void print_writeback_pixel_formats(int fd, uint32_t id, const char *prefi
 	drmModeFreePropertyBlob(blob);
 }
 
+static void print_path(int fd, uint32_t id, const char *prefix)
+{
+	if (!id)
+		return;
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, id);
+
+	printf("%s" L_LAST "%.*s\n", prefix, (int)blob->length, (char *)blob->data);
+
+	drmModeFreePropertyBlob(blob);
+}
+
 static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 {
 	drmModeObjectProperties *props = drmModeObjectGetProperties(fd, id, type);
@@ -571,6 +583,8 @@ static void properties(int fd, uint32_t id, uint32_t type, const char *prefix)
 				print_mode_id(fd, props->prop_values[i], sub_prefix);
 			else if (strcmp(prop->name, "WRITEBACK_PIXEL_FORMATS") == 0)
 				print_writeback_pixel_formats(fd, props->prop_values[i], sub_prefix);
+			else if (strcmp(prop->name, "PATH") == 0)
+				print_path(fd, props->prop_values[i], sub_prefix);
 			break;
 		case DRM_MODE_PROP_BITMASK:
 			printf("Bitmask {%s", prop->enums[0].name);
