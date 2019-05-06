@@ -11,6 +11,7 @@ add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 conf = configuration_data()
 libdrm = dependency('libdrm', version: '>= 2.4.74')
+jsonc = dependency('json-c', version: '>=0.13')
 
 # These specific versions added more modifiers, so we check for these instead
 # of using #ifdef on every single one
@@ -25,7 +26,8 @@ config_h = configure_file(
   output: 'config.h',
 )
 
-executable('drm_info', 'drm_info.c', config_h,
-  dependencies: libdrm,
+executable('drm_info',
+  files('drm_info.c', 'json.c'),
+  dependencies: [libdrm, jsonc],
   install: true,
 )

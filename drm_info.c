@@ -904,7 +904,7 @@ static void plane_info(int fd)
 	drmModeFreePlaneResources(res);
 }
 
-static void drm_info(const char *path)
+static void device_info(const char *path)
 {
 	int fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -934,7 +934,7 @@ static void drm_info(const char *path)
 	close(fd);
 }
 
-int main(void)
+/*int main(void)
 {
 	char path[PATH_MAX];
 	for (int i = 0;; ++i) {
@@ -942,6 +942,6 @@ int main(void)
 		if (access(path, R_OK) < 0)
 			break;
 
-		drm_info(path);
+		device_info(path);
 	}
-}
+}*/
