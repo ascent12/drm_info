@@ -139,6 +139,129 @@ static struct json_object *driver_info(int fd)
 	return obj;
 }
 
+#if HAVE_LIBDRM_2_4_83
+static struct json_object *in_formats_info(int fd, uint32_t blob_id)
+{
+	struct json_object *arr = json_object_new_array();
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+
+	struct drm_format_modifier_blob *data = blob->data;
+
+	uint32_t *fmts = (uint32_t *)
+		((char *)data + data->formats_offset);
+
+	struct drm_format_modifier *mods = (struct drm_format_modifier *)
+		((char *)data + data->modifiers_offset);
+
+	for (uint32_t i = 0; i < data->count_modifiers; ++i) {
+		struct json_object *mod_obj = json_object_new_object();
+		json_object_object_add(mod_obj, "modifier",
+			new_json_object_uint64(mods[i].modifier));
+
+		struct json_object *fmts_arr = json_object_new_array();
+		for (uint64_t j = 0; j < 64; ++j) {
+			if (mods[i].formats & (1ull << j)) {
+				uint32_t fmt = fmts[j + mods[i].offset];
+				json_object_array_add(fmts_arr, new_json_object_uint64(fmt));
+			}
+		}
+		json_object_object_add(mod_obj, "formats", fmts_arr);
+
+		json_object_array_add(arr, mod_obj);
+	}
+
+	drmModeFreePropertyBlob(blob);
+
+	return arr;
+}
+#else
+static struct json_object *in_formats_info(int fd, uint32_t blob_id)
+{
+	(void)fd;
+	(void)blob_id;
+
+	return NULL;
+}
+#endif
+
+static struct json_object *mode_info(const drmModeModeInfo *mode)
+{
+	struct json_object *obj = json_object_new_object();
+
+	json_object_object_add(obj, "clock", new_json_object_uint64(mode->clock));
+
+	json_object_object_add(obj, "hdisplay", new_json_object_uint64(mode->hdisplay));
+	json_object_object_add(obj, "hsync_start", new_json_object_uint64(mode->hsync_start));
+	json_object_object_add(obj, "hsync_end", new_json_object_uint64(mode->hsync_end));
+	json_object_object_add(obj, "htotal", new_json_object_uint64(mode->htotal));
+	json_object_object_add(obj, "hskew", new_json_object_uint64(mode->hskew));
+
+	json_object_object_add(obj, "vdisplay", new_json_object_uint64(mode->vdisplay));
+	json_object_object_add(obj, "vsync_start", new_json_object_uint64(mode->vsync_start));
+	json_object_object_add(obj, "vsync_end", new_json_object_uint64(mode->vsync_end));
+	json_object_object_add(obj, "vtotal", new_json_object_uint64(mode->vtotal));
+	json_object_object_add(obj, "vscan", new_json_object_uint64(mode->vscan));
+
+	json_object_object_add(obj, "vrefresh", new_json_object_uint64(mode->vrefresh));
+
+	json_object_object_add(obj, "flags", new_json_object_uint64(mode->flags));
+	json_object_object_add(obj, "type", new_json_object_uint64(mode->type));
+	json_object_object_add(obj, "name", json_object_new_string(mode->name));
+
+	return obj;
+}
+
+static struct json_object *mode_id_info(int fd, uint32_t blob_id)
+{
+	if (blob_id == 0) {
+		return NULL;
+	}
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+
+	drmModeModeInfo *mode = blob->data;
+
+	struct json_object *obj = mode_info(mode);
+
+	drmModeFreePropertyBlob(blob);
+
+	return obj;
+}
+
+static struct json_object *writeback_pixel_formats_info(int fd, uint32_t blob_id)
+{
+	struct json_object *arr = json_object_new_object();
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+
+	uint32_t *fmts = blob->data;
+	uint32_t fmts_len = blob->length / sizeof(uint32_t);
+	for (uint32_t i = 0; i < fmts_len; ++i) {
+		json_object_array_add(arr, new_json_object_uint64(fmts[i]));
+	}
+
+	drmModeFreePropertyBlob(blob);
+
+	return arr;
+}
+
+static struct json_object *path_info(int fd, uint32_t blob_id)
+{
+	if (blob_id == 0) {
+		return NULL;
+	}
+
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+
+	struct json_object *obj = json_object_new_string_len(blob->data, blob->length);
+
+	drmModeFreePropertyBlob(blob);
+
+	return obj;
+}
+
+
 static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 {
 	struct json_object *obj = json_object_new_object();
@@ -177,6 +300,22 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 				json_object_new_string(prop->enums[j]));
 		}
 		json_object_object_add(prop_obj, "enums", enums_arr);*/
+
+		if ((flags & DRM_MODE_PROP_LEGACY_TYPE) == DRM_MODE_PROP_BLOB) {
+			if (strcmp(prop->name, "IN_FORMATS") == 0) {
+				json_object_object_add(prop_obj, "data",
+					in_formats_info(fd, props->prop_values[i]));
+			} else if (strcmp(prop->name, "MODE_ID") == 0) {
+				json_object_object_add(prop_obj, "data",
+					mode_id_info(fd, props->prop_values[i]));
+			} else if (strcmp(prop->name, "WRITEBACK_PIXEL_FORMATS") == 0) {
+				json_object_object_add(prop_obj, "data",
+					writeback_pixel_formats_info(fd, props->prop_values[i]));
+			} else if (strcmp(prop->name, "PATH") == 0) {
+				json_object_object_add(prop_obj, "data",
+					path_info(fd, props->prop_values[i]));
+			}
+		}
 
 		// TODO
 		/*struct json_object *blobs_arr = json_object_new_array();
@@ -232,7 +371,7 @@ static struct json_object *connectors_info(int fd, drmModeRes *res)
 		struct json_object *modes_arr = json_object_new_array();
 		for (int j = 0; j < conn->count_modes; ++j) {
 			const drmModeModeInfo *mode = &conn->modes[j];
-			(void)mode; // TODO
+			json_object_array_add(modes_arr, mode_info(mode));
 		}
 		json_object_object_add(conn_obj, "modes", modes_arr);
 
