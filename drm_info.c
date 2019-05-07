@@ -142,6 +142,37 @@ static void driver_info(int fd)
 	print_cap_bool(fd, true, DRM_CAP_SYNCOBJ);
 }
 
+static const char *bustype_str(int type)
+{
+	switch (type) {
+	case DRM_BUS_PCI:      return "PCI";
+	case DRM_BUS_USB:      return "USB";
+	case DRM_BUS_PLATFORM: return "Platform";
+	case DRM_BUS_HOST1X:   return "host1x";
+	default:               return "Unknown";
+	}
+}
+
+static void device_info(int fd)
+{
+	drmDevice *dev;
+	if (drmGetDevice(fd, &dev) != 0) {
+		printf(L_VAL "Device: failed to get device info\n");
+		return;
+	}
+
+	char dev_str[128] = {0};
+	if (dev->bustype == DRM_BUS_PCI) {
+		drmPciDeviceInfo *pci = dev->deviceinfo.pci;
+		snprintf(dev_str, sizeof(dev_str), " %04x:%04x",
+			pci->vendor_id, pci->device_id);
+	}
+
+	printf(L_VAL "Device: %s%s\n", bustype_str(dev->bustype), dev_str);
+
+	drmFreeDevice(&dev);
+}
+
 static const char *obj_str(uint32_t type)
 {
 	switch (type) {
@@ -883,8 +914,9 @@ static void drm_info(const char *path)
 
 	// Print driver info before getting resources, as it'll try to enable some
 	// DRM client capabilities
-	printf("Device: %s\n", path);
+	printf("Node: %s\n", path);
 	driver_info(fd);
+	device_info(fd);
 
 	drmModeRes *res = drmModeGetResources(fd);
 	if (!res) {
