@@ -85,7 +85,7 @@ static int json_object_uint_to_json_string(struct json_object *obj,
 
 static struct json_object *new_json_object_uint64(uint64_t u)
 {
-	json_object *obj = json_object_new_int64((int64_t)u);
+	struct json_object *obj = json_object_new_int64((int64_t)u);
 	json_object_set_serializer(obj, json_object_uint_to_json_string, NULL, NULL);
 	return obj;
 }
@@ -126,7 +126,7 @@ static struct json_object *driver_info(int fd)
 
 	struct json_object *caps_obj = json_object_new_object();
 	for (size_t i = 0; i < sizeof(caps) / sizeof(caps[0]); ++i) {
-		json_object *cap_obj = NULL;
+		struct json_object *cap_obj = NULL;
 		uint64_t cap;
 		if (drmGetCap(fd, caps[i].cap, &cap) == 0) {
 			cap_obj = json_object_new_int64(cap);
@@ -134,6 +134,40 @@ static struct json_object *driver_info(int fd)
 		json_object_object_add(caps_obj, caps[i].name, cap_obj);
 	}
 	json_object_object_add(obj, "caps", caps_obj);
+
+	return obj;
+}
+
+static struct json_object *device_info(int fd)
+{
+	drmDevice *dev;
+	if (drmGetDevice(fd, &dev) != 0) {
+		perror("drmGetDevice");
+		return NULL;
+	}
+
+	struct json_object *obj = json_object_new_object();
+	json_object_object_add(obj, "bus_type",
+		new_json_object_uint64(dev->bustype));
+
+	struct json_object *device_data_obj = NULL;
+	switch (dev->bustype) {
+	case DRM_BUS_PCI:;
+		drmPciDeviceInfo *pci = dev->deviceinfo.pci;
+		device_data_obj = json_object_new_object();
+		json_object_object_add(device_data_obj, "vendor",
+			new_json_object_uint64(pci->vendor_id));
+		json_object_object_add(device_data_obj, "device",
+			new_json_object_uint64(pci->device_id));
+		json_object_object_add(device_data_obj, "subsystem_vendor",
+			new_json_object_uint64(pci->subvendor_id));
+		json_object_object_add(device_data_obj, "subsystem_device",
+			new_json_object_uint64(pci->subdevice_id));
+		break;
+	}
+	json_object_object_add(obj, "device_data", device_data_obj);
+
+	drmFreeDevice(&dev);
 
 	return obj;
 }
@@ -299,7 +333,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		json_object_object_add(prop_obj, "raw_value",
 			new_json_object_uint64(value));
 
-		json_object *spec_obj = NULL;
+		struct json_object *spec_obj = NULL;
 		switch (type) {
 		case DRM_MODE_PROP_RANGE:
 			spec_obj = json_object_new_object();
@@ -312,7 +346,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		case DRM_MODE_PROP_BITMASK:
 			spec_obj = json_object_new_array();
 			for (int j = 0; j < prop->count_enums; ++j) {
-				json_object *item_obj = json_object_new_object();
+				struct json_object *item_obj = json_object_new_object();
 				json_object_object_add(item_obj, "name",
 					json_object_new_string(prop->enums[j].name));
 				json_object_object_add(item_obj, "value",
@@ -330,7 +364,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		}
 		json_object_object_add(prop_obj, "spec", spec_obj);
 
-		json_object *value_obj;
+		struct json_object *value_obj;
 		switch (type) {
 		// TODO: DRM_MODE_PROP_BLOB
 		case DRM_MODE_PROP_SIGNED_RANGE:
@@ -341,7 +375,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		}
 		json_object_object_add(prop_obj, "value", value_obj);
 
-		json_object *data_obj = NULL;
+		struct json_object *data_obj = NULL;
 		switch (type) {
 		case DRM_MODE_PROP_BLOB:
 			if (strcmp(prop->name, "IN_FORMATS") == 0) {
@@ -529,7 +563,7 @@ static struct json_object *planes_info(int fd)
 	return arr;
 }
 
-static struct json_object *device_info(const char *path)
+static struct json_object *node_info(const char *path)
 {
 	struct json_object *obj = json_object_new_object();
 
@@ -541,8 +575,9 @@ static struct json_object *device_info(const char *path)
 
 	// Get driver info before getting resources, as it'll try to enable some
 	// DRM client capabilities
-	struct json_object *driver = driver_info(fd);
-	json_object_object_add(obj, "driver", driver);
+	json_object_object_add(obj, "driver", driver_info(fd));
+
+	json_object_object_add(obj, "device", device_info(fd));
 
 	drmModeRes *res = drmModeGetResources(fd);
 	if (!res) {
@@ -572,7 +607,7 @@ static struct json_object *drm_info(void)
 		if (access(path, R_OK) < 0)
 			break;
 
-		struct json_object *dev = device_info(path);
+		struct json_object *dev = node_info(path);
 		json_object_object_add(obj, path, dev);
 	}
 
