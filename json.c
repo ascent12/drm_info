@@ -354,6 +354,9 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 				json_object_array_add(spec_obj, item_obj);
 			}
 			break;
+		case DRM_MODE_PROP_OBJECT:
+			spec_obj = new_json_object_uint64(prop->values[0]);
+			break;
 		case DRM_MODE_PROP_SIGNED_RANGE:
 			spec_obj = json_object_new_object();
 			json_object_object_add(spec_obj, "min",
