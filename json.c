@@ -15,8 +15,6 @@
 
 #include "config.h"
 
-#define JSON_SCHEMA_VERSION 0
-
 // Defines for comaptibility with old libdrm
 
 // drm.h
@@ -103,6 +101,7 @@ static struct json_object *driver_info(int fd)
 	}
 
 	json_object_object_add(obj, "name", json_object_new_string(ver->name));
+	json_object_object_add(obj, "desc", json_object_new_string(ver->desc));
 
 	struct json_object *ver_obj = json_object_new_object();
 	json_object_object_add(ver_obj, "major",
@@ -566,9 +565,6 @@ static struct json_object *device_info(const char *path)
 static struct json_object *drm_info(void)
 {
 	struct json_object *obj = json_object_new_object();
-
-	json_object_object_add(obj, "version",
-		json_object_new_int(JSON_SCHEMA_VERSION));
 
 	char path[PATH_MAX];
 	for (int i = 0;; ++i) {
