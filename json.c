@@ -45,30 +45,30 @@ static const struct {
 	const char *name;
 	uint64_t cap;
 } client_caps[] = {
-	{ "DRM_CLIENT_CAP_STEREO_3D", DRM_CLIENT_CAP_STEREO_3D },
-	{ "DRM_CLIENT_CAP_UNIVERSAL_PLANES", DRM_CLIENT_CAP_UNIVERSAL_PLANES },
-	{ "DRM_CLIENT_CAP_ATOMIC", DRM_CLIENT_CAP_ATOMIC },
-	{ "DRM_CLIENT_CAP_ASPECT_RATIO", DRM_CLIENT_CAP_ASPECT_RATIO },
-	{ "DRM_CLIENT_CAP_WRITEBACK_CONNECTORS", DRM_CLIENT_CAP_WRITEBACK_CONNECTORS },
+	{ "STEREO_3D", DRM_CLIENT_CAP_STEREO_3D },
+	{ "UNIVERSAL_PLANES", DRM_CLIENT_CAP_UNIVERSAL_PLANES },
+	{ "ATOMIC", DRM_CLIENT_CAP_ATOMIC },
+	{ "ASPECT_RATIO", DRM_CLIENT_CAP_ASPECT_RATIO },
+	{ "WRITEBACK_CONNECTORS", DRM_CLIENT_CAP_WRITEBACK_CONNECTORS },
 };
 
 static const struct {
 	const char *name;
 	uint64_t cap;
 } caps[] = {
-	{ "DRM_CAP_DUMB_BUFFER", DRM_CAP_DUMB_BUFFER },
-	{ "DRM_CAP_VBLANK_HIGH_CRTC", DRM_CAP_VBLANK_HIGH_CRTC },
-	{ "DRM_CAP_DUMB_PREFERRED_DEPTH", DRM_CAP_DUMB_PREFERRED_DEPTH },
-	{ "DRM_CAP_DUMB_PREFER_SHADOW", DRM_CAP_DUMB_PREFER_SHADOW },
-	{ "DRM_CAP_PRIME", DRM_CAP_PRIME },
-	{ "DRM_CAP_TIMESTAMP_MONOTONIC", DRM_CAP_TIMESTAMP_MONOTONIC },
-	{ "DRM_CAP_ASYNC_PAGE_FLIP", DRM_CAP_ASYNC_PAGE_FLIP },
-	{ "DRM_CAP_CURSOR_WIDTH", DRM_CAP_CURSOR_WIDTH },
-	{ "DRM_CAP_CURSOR_HEIGHT", DRM_CAP_CURSOR_HEIGHT },
-	{ "DRM_CAP_ADDFB2_MODIFIERS", DRM_CAP_ADDFB2_MODIFIERS },
-	{ "DRM_CAP_PAGE_FLIP_TARGET", DRM_CAP_PAGE_FLIP_TARGET },
-	{ "DRM_CAP_CRTC_IN_VBLANK_EVENT", DRM_CAP_CRTC_IN_VBLANK_EVENT },
-	{ "DRM_CAP_SYNCOBJ", DRM_CAP_SYNCOBJ },
+	{ "DUMB_BUFFER", DRM_CAP_DUMB_BUFFER },
+	{ "VBLANK_HIGH_CRTC", DRM_CAP_VBLANK_HIGH_CRTC },
+	{ "DUMB_PREFERRED_DEPTH", DRM_CAP_DUMB_PREFERRED_DEPTH },
+	{ "DUMB_PREFER_SHADOW", DRM_CAP_DUMB_PREFER_SHADOW },
+	{ "PRIME", DRM_CAP_PRIME },
+	{ "TIMESTAMP_MONOTONIC", DRM_CAP_TIMESTAMP_MONOTONIC },
+	{ "ASYNC_PAGE_FLIP", DRM_CAP_ASYNC_PAGE_FLIP },
+	{ "CURSOR_WIDTH", DRM_CAP_CURSOR_WIDTH },
+	{ "CURSOR_HEIGHT", DRM_CAP_CURSOR_HEIGHT },
+	{ "ADDFB2_MODIFIERS", DRM_CAP_ADDFB2_MODIFIERS },
+	{ "PAGE_FLIP_TARGET", DRM_CAP_PAGE_FLIP_TARGET },
+	{ "CRTC_IN_VBLANK_EVENT", DRM_CAP_CRTC_IN_VBLANK_EVENT },
+	{ "SYNCOBJ", DRM_CAP_SYNCOBJ },
 };
 
 static int json_object_uint_to_json_string(struct json_object *obj,
@@ -109,7 +109,7 @@ static struct json_object *driver_info(int fd)
 		json_object_new_int(ver->version_major));
 	json_object_object_add(ver_obj, "minor",
 		json_object_new_int(ver->version_minor));
-	json_object_object_add(ver_obj, "patchlevel",
+	json_object_object_add(ver_obj, "patch",
 		json_object_new_int(ver->version_patchlevel));
 	json_object_object_add(ver_obj, "date",
 		json_object_new_string(ver->date));
@@ -231,7 +231,7 @@ static struct json_object *mode_id_info(int fd, uint32_t blob_id)
 
 static struct json_object *writeback_pixel_formats_info(int fd, uint32_t blob_id)
 {
-	struct json_object *arr = json_object_new_object();
+	struct json_object *arr = json_object_new_array();
 
 	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
 
@@ -280,50 +280,90 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		}
 
 		uint32_t flags = prop->flags;
+		uint32_t type = flags &
+			(DRM_MODE_PROP_LEGACY_TYPE | DRM_MODE_PROP_EXTENDED_TYPE);
+		bool atomic = flags & DRM_MODE_PROP_ATOMIC;
+		bool immutable = flags & DRM_MODE_PROP_IMMUTABLE;
+		uint64_t value = props->prop_values[i];
 
 		struct json_object *prop_obj = json_object_new_object();
 		json_object_object_add(prop_obj, "id",
 			new_json_object_uint64(prop->prop_id));
-		json_object_object_add(prop_obj, "flags", new_json_object_uint64(flags));
+		json_object_object_add(prop_obj, "flags",
+			new_json_object_uint64(flags));
+		json_object_object_add(prop_obj, "type", new_json_object_uint64(type));
+		json_object_object_add(prop_obj, "atomic",
+			json_object_new_boolean(atomic));
+		json_object_object_add(prop_obj, "immutable",
+			json_object_new_boolean(immutable));
 
-		struct json_object *values_arr = json_object_new_array();
-		for (int j = 0; j < prop->count_values; ++j) {
-			json_object_array_add(values_arr,
-				new_json_object_uint64(prop->values[j]));
-		}
-		json_object_object_add(prop_obj, "values", values_arr);
+		json_object_object_add(prop_obj, "raw_value",
+			new_json_object_uint64(value));
 
-		// TODO
-		/*struct json_object *enums_arr = json_object_new_array();
-		for (int j = 0; j < prop->count_enums; ++j) {
-			json_object_array_add(enums_arr,
-				json_object_new_string(prop->enums[j]));
-		}
-		json_object_object_add(prop_obj, "enums", enums_arr);*/
-
-		if ((flags & DRM_MODE_PROP_LEGACY_TYPE) == DRM_MODE_PROP_BLOB) {
-			if (strcmp(prop->name, "IN_FORMATS") == 0) {
-				json_object_object_add(prop_obj, "data",
-					in_formats_info(fd, props->prop_values[i]));
-			} else if (strcmp(prop->name, "MODE_ID") == 0) {
-				json_object_object_add(prop_obj, "data",
-					mode_id_info(fd, props->prop_values[i]));
-			} else if (strcmp(prop->name, "WRITEBACK_PIXEL_FORMATS") == 0) {
-				json_object_object_add(prop_obj, "data",
-					writeback_pixel_formats_info(fd, props->prop_values[i]));
-			} else if (strcmp(prop->name, "PATH") == 0) {
-				json_object_object_add(prop_obj, "data",
-					path_info(fd, props->prop_values[i]));
+		json_object *spec_obj = NULL;
+		switch (type) {
+		case DRM_MODE_PROP_RANGE:
+			spec_obj = json_object_new_object();
+			json_object_object_add(spec_obj, "min",
+				new_json_object_uint64(prop->values[0]));
+			json_object_object_add(spec_obj, "max",
+				new_json_object_uint64(prop->values[1]));
+			break;
+		case DRM_MODE_PROP_ENUM:
+		case DRM_MODE_PROP_BITMASK:
+			spec_obj = json_object_new_array();
+			for (int j = 0; j < prop->count_enums; ++j) {
+				json_object *item_obj = json_object_new_object();
+				json_object_object_add(item_obj, "name",
+					json_object_new_string(prop->enums[j].name));
+				json_object_object_add(item_obj, "value",
+					new_json_object_uint64(prop->enums[j].value));
+				json_object_array_add(spec_obj, item_obj);
 			}
+			break;
+		case DRM_MODE_PROP_SIGNED_RANGE:
+			spec_obj = json_object_new_object();
+			json_object_object_add(spec_obj, "min",
+				json_object_new_int64((int64_t)prop->values[0]));
+			json_object_object_add(spec_obj, "max",
+				json_object_new_int64((int64_t)prop->values[1]));
+			break;
 		}
+		json_object_object_add(prop_obj, "spec", spec_obj);
 
-		// TODO
-		/*struct json_object *blobs_arr = json_object_new_array();
-		for (int j = 0; j < prop->count_blobs; ++j) {
-			json_object_array_add(blobs_arr,
-				json_object_new_string(prop->blobs[j]));
+		json_object *value_obj;
+		switch (type) {
+		// TODO: DRM_MODE_PROP_BLOB
+		case DRM_MODE_PROP_SIGNED_RANGE:
+			value_obj = json_object_new_int64((int64_t)value);
+			break;
+		default:
+			value_obj = new_json_object_uint64(value);
 		}
-		json_object_object_add(prop_obj, "blobs", blobs_arr);*/
+		json_object_object_add(prop_obj, "value", value_obj);
+
+		json_object *data_obj = NULL;
+		switch (type) {
+		case DRM_MODE_PROP_BLOB:
+			if (strcmp(prop->name, "IN_FORMATS") == 0) {
+				data_obj = in_formats_info(fd, value);
+			} else if (strcmp(prop->name, "MODE_ID") == 0) {
+				data_obj = mode_id_info(fd, value);
+			} else if (strcmp(prop->name, "WRITEBACK_PIXEL_FORMATS") == 0) {
+				data_obj = writeback_pixel_formats_info(fd, value);
+			} else if (strcmp(prop->name, "PATH") == 0) {
+				data_obj = path_info(fd, props->prop_values[i]);
+			}
+			break;
+		case DRM_MODE_PROP_RANGE:
+			// This is a special case, as the SRC_* properties are
+			// in 16.16 fixed point
+			if (strncmp(prop->name, "SRC_", 4) == 0) {
+				data_obj = new_json_object_uint64(value >> 16);
+			}
+			break;
+		}
+		json_object_object_add(prop_obj, "data", data_obj);
 
 		json_object_object_add(obj, prop->name, prop_obj);
 
