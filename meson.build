@@ -27,7 +27,7 @@ config_h = configure_file(
 )
 
 executable('drm_info',
-  files('drm_info.c', 'json.c'),
+  files('main.c', 'json.c', 'pretty.c'),
   dependencies: [libdrm, jsonc],
   install: true,
 )

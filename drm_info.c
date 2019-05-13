@@ -933,15 +933,3 @@ static void node_info(const char *path)
 
 	close(fd);
 }
-
-/*int main(void)
-{
-	char path[PATH_MAX];
-	for (int i = 0;; ++i) {
-		snprintf(path, sizeof path, DRM_DEV_NAME, DRM_DIR_NAME, i);
-		if (access(path, R_OK) < 0)
-			break;
-
-		node_info(path);
-	}
-}*/

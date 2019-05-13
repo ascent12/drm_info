@@ -9,11 +9,11 @@
 #include <unistd.h>
 
 #include <json-c/json_object.h>
-#include <json-c/json_util.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
 #include "config.h"
+#include "drm_info.h"
 
 // Defines for comaptibility with old libdrm
 
@@ -600,7 +600,7 @@ static struct json_object *node_info(const char *path)
 	return obj;
 }
 
-static struct json_object *drm_info(void)
+struct json_object *drm_info(void)
 {
 	struct json_object *obj = json_object_new_object();
 
@@ -615,13 +615,4 @@ static struct json_object *drm_info(void)
 	}
 
 	return obj;
-}
-
-int main(void)
-{
-	struct json_object *obj = drm_info();
-	json_object_to_fd(STDOUT_FILENO, obj,
-		JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED);
-	json_object_put(obj);
-	return 0;
 }
