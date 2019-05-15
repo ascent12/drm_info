@@ -504,9 +504,9 @@ static void print_properties(struct json_object *obj, const char *prefix)
 			const char *smax_str = i64_str(smax);
 
 			if (smin_str)
-				printf("range [%s, ", smin_str);
+				printf("srange [%s, ", smin_str);
 			else
-				printf("range [%"PRIi64", ", smin);
+				printf("srange [%"PRIi64", ", smin);
 
 			if (smax_str)
 				printf("%s]", smax_str);
@@ -530,6 +530,7 @@ static void print_modes(struct json_object *arr, const char *prefix)
 		return;
 	}
 
+	printf("%s" L_VAL "Modes\n", prefix);
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
 		bool last = i == json_object_array_length(arr) - 1;
 		printf("%s" L_LINE "%s", prefix, last ? L_LAST : L_VAL);
