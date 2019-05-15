@@ -522,12 +522,72 @@ static void print_connectors(struct json_object *arr)
 	}
 }
 
+static const char *encoder_str(uint32_t type)
+{
+	switch (type) {
+	case DRM_MODE_ENCODER_NONE:    return "none";
+	case DRM_MODE_ENCODER_DAC:     return "DAC";
+	case DRM_MODE_ENCODER_TMDS:    return "TMDS";
+	case DRM_MODE_ENCODER_LVDS:    return "LVDS";
+	case DRM_MODE_ENCODER_TVDAC:   return "TV DAC";
+	case DRM_MODE_ENCODER_VIRTUAL: return "virtual";
+	case DRM_MODE_ENCODER_DSI:     return "DSI";
+	case DRM_MODE_ENCODER_DPMST:   return "DP MST";
+	case DRM_MODE_ENCODER_DPI:     return "DPI";
+	default:                       return "unknown";
+	}
+}
+
+static void print_bitmask(uint32_t mask)
+{
+	bool first = true;
+	printf("{");
+	for (uint32_t i = 0; i < 31; ++i) {
+		if (!(mask & (1 << i)))
+			continue;
+
+		printf("%s%"PRIu32, first ? "" : ", ", i);
+		first = false;
+	}
+	printf("}");
+}
+
+static void print_encoders(struct json_object *arr)
+{
+	printf(L_VAL "Encoders\n");
+	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
+		struct json_object *obj = json_object_array_get_idx(arr, i);
+		bool last = i == json_object_array_length(arr) - 1;
+
+		uint32_t id = get_object_object_uint64(obj, "id");
+		uint32_t type = get_object_object_uint64(obj, "type");
+		uint32_t crtcs = get_object_object_uint64(obj, "possible_crtcs");
+		uint32_t clones = get_object_object_uint64(obj, "possible_clones");
+
+		printf(L_LINE "%sEncoder %zu\n", last ? L_LAST : L_VAL, i);
+
+		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n",
+			last ? L_GAP : L_LINE, id);
+		printf(L_LINE "%s" L_VAL "Type: %s\n", last ? L_GAP : L_LINE,
+			encoder_str(type));
+
+		printf(L_LINE "%s" L_VAL "CRTCS: ", last ? L_GAP : L_LINE);
+		print_bitmask(crtcs);
+		printf("\n");
+
+		printf(L_LINE "%s" L_LAST "Clones: ", last ? L_GAP : L_LINE);
+		print_bitmask(clones);
+		printf("\n");
+	}
+}
+
 static void print_node(const char *path, struct json_object *obj)
 {
 	printf("Node: %s\n", path);
 	print_driver(json_object_object_get(obj, "driver"));
 	print_device(json_object_object_get(obj, "device"));
 	print_connectors(json_object_object_get(obj, "connectors"));
+	print_encoders(json_object_object_get(obj, "encoders"));
 }
 
 void print_drm(struct json_object *obj)
