@@ -2,11 +2,50 @@
 #include <stdio.h>
 
 #include <json-c/json.h>
+#include <drm_fourcc.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
 #include "config.h"
 #include "drm_info.h"
+
+// Defines for comaptibility with old libdrm
+
+// drm.h
+
+#ifndef DRM_CAP_CRTC_IN_VBLANK_EVENT
+#define DRM_CAP_CRTC_IN_VBLANK_EVENT 0x12
+#endif
+
+#ifndef DRM_CAP_SYNCOBJ
+#define DRM_CAP_SYNCOBJ 0x13
+#endif
+
+#ifndef DRM_CLIENT_CAP_ASPECT_RATIO
+#define DRM_CLIENT_CAP_ASPECT_RATIO 4
+#endif
+
+#ifndef DRM_CLIENT_CAP_WRITEBACK_CONNECTORS
+#define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS 5
+#endif
+
+#ifndef DRM_MODE_CONNECTOR_WRITEBACK
+#define DRM_MODE_CONNECTOR_WRITEBACK 18
+#endif
+
+// drm_fourcc.h
+
+#ifndef DRM_FORMAT_R16
+#define DRM_FORMAT_R16 fourcc_code('R', '1', '6', ' ')
+#endif
+
+#ifndef DRM_FORMAT_RG1616
+#define DRM_FORMAT_RG1616 fourcc_code('R', 'G', '3', '2')
+#endif
+
+#ifndef DRM_FORMAT_GR1616
+#define DRM_FORMAT_GR1616 fourcc_code('G', 'R', '3', '2')
+#endif
 
 #define L_LINE "│   "
 #define L_VAL  "├───"
@@ -209,6 +248,79 @@ static void print_mode(struct json_object *obj)
 	case DRM_MODE_FLAG_3D_SIDE_BY_SIDE_HALF:
 		printf("3d-side-by-side-half ");
 		break;
+	}
+}
+
+static const char *format_str(uint32_t fmt)
+{
+	switch (fmt) {
+	case DRM_FORMAT_C8:          return "C8";
+	case DRM_FORMAT_R8:          return "R8";
+	case DRM_FORMAT_R16:         return "R16";
+	case DRM_FORMAT_RG88:        return "RG88";
+	case DRM_FORMAT_GR88:        return "GR88";
+	case DRM_FORMAT_RG1616:      return "RG1616";
+	case DRM_FORMAT_GR1616:      return "GR1616";
+	case DRM_FORMAT_RGB332:      return "RGB332";
+	case DRM_FORMAT_BGR233:      return "BGR233";
+	case DRM_FORMAT_XRGB4444:    return "XRGB4444";
+	case DRM_FORMAT_XBGR4444:    return "XBGR4444";
+	case DRM_FORMAT_RGBX4444:    return "RGBX4444";
+	case DRM_FORMAT_BGRX4444:    return "BGRX4444";
+	case DRM_FORMAT_ARGB4444:    return "ARGB4444";
+	case DRM_FORMAT_ABGR4444:    return "ABGR4444";
+	case DRM_FORMAT_RGBA4444:    return "RGBA4444";
+	case DRM_FORMAT_BGRA4444:    return "BGRA4444";
+	case DRM_FORMAT_XRGB1555:    return "XRGB1555";
+	case DRM_FORMAT_XBGR1555:    return "XBGR1555";
+	case DRM_FORMAT_RGBX5551:    return "RGBX5551";
+	case DRM_FORMAT_BGRX5551:    return "BGRX5551";
+	case DRM_FORMAT_ARGB1555:    return "ARGB1555";
+	case DRM_FORMAT_ABGR1555:    return "ABGR1555";
+	case DRM_FORMAT_RGBA5551:    return "RGBA5551";
+	case DRM_FORMAT_BGRA5551:    return "BGRA5551";
+	case DRM_FORMAT_RGB565:      return "RGB565";
+	case DRM_FORMAT_BGR565:      return "BGR565";
+	case DRM_FORMAT_RGB888:      return "RGB888";
+	case DRM_FORMAT_BGR888:      return "BGR888";
+	case DRM_FORMAT_XRGB8888:    return "XRGB8888";
+	case DRM_FORMAT_XBGR8888:    return "XBGR8888";
+	case DRM_FORMAT_RGBX8888:    return "RGBX8888";
+	case DRM_FORMAT_BGRX8888:    return "BGRX8888";
+	case DRM_FORMAT_ARGB8888:    return "ARGB8888";
+	case DRM_FORMAT_ABGR8888:    return "ABGR8888";
+	case DRM_FORMAT_RGBA8888:    return "RGBA8888";
+	case DRM_FORMAT_BGRA8888:    return "BGRA8888";
+	case DRM_FORMAT_XRGB2101010: return "XRGB2101010";
+	case DRM_FORMAT_XBGR2101010: return "XBGR2101010";
+	case DRM_FORMAT_RGBX1010102: return "RGBX1010102";
+	case DRM_FORMAT_BGRX1010102: return "BGRX1010102";
+	case DRM_FORMAT_ARGB2101010: return "ARGB2101010";
+	case DRM_FORMAT_ABGR2101010: return "ABGR2101010";
+	case DRM_FORMAT_RGBA1010102: return "RGBA1010102";
+	case DRM_FORMAT_BGRA1010102: return "BGRA1010102";
+	case DRM_FORMAT_YUYV:        return "YUYV";
+	case DRM_FORMAT_YVYU:        return "YVYU";
+	case DRM_FORMAT_UYVY:        return "UYVY";
+	case DRM_FORMAT_VYUY:        return "VYUY";
+	case DRM_FORMAT_AYUV:        return "AYUV";
+	case DRM_FORMAT_NV12:        return "NV12";
+	case DRM_FORMAT_NV21:        return "NV21";
+	case DRM_FORMAT_NV16:        return "NV16";
+	case DRM_FORMAT_NV61:        return "NV61";
+	case DRM_FORMAT_NV24:        return "NV24";
+	case DRM_FORMAT_NV42:        return "NV42";
+	case DRM_FORMAT_YUV410:      return "YUV410";
+	case DRM_FORMAT_YVU410:      return "YVU410";
+	case DRM_FORMAT_YUV411:      return "YUV411";
+	case DRM_FORMAT_YVU411:      return "YVU411";
+	case DRM_FORMAT_YUV420:      return "YUV420";
+	case DRM_FORMAT_YVU420:      return "YVU420";
+	case DRM_FORMAT_YUV422:      return "YUV422";
+	case DRM_FORMAT_YVU422:      return "YVU422";
+	case DRM_FORMAT_YUV444:      return "YUV444";
+	case DRM_FORMAT_YVU444:      return "YVU444";
+	default:                     return "Unknown";
 	}
 }
 
@@ -490,7 +602,7 @@ static void print_connectors(struct json_object *arr)
 		drmModeSubPixel subpixel = get_object_object_uint64(obj, "subpixel");
 		struct json_object *encs_arr = json_object_object_get(obj, "encoders");
 		struct json_object *modes_arr = json_object_object_get(obj, "modes");
-		struct json_object *props_arr = json_object_object_get(obj, "properties");
+		struct json_object *props_obj = json_object_object_get(obj, "properties");
 
 		printf(L_LINE "%sConnector %zu\n", last ? L_LAST : L_VAL, i);
 
@@ -518,7 +630,7 @@ static void print_connectors(struct json_object *arr)
 		printf("}\n");
 
 		print_modes(modes_arr, last ? L_LINE L_GAP : L_LINE L_LINE);
-		print_properties(props_arr, last ? L_LINE L_GAP : L_LINE L_LINE);
+		print_properties(props_obj, last ? L_LINE L_GAP : L_LINE L_LINE);
 	}
 }
 
@@ -581,6 +693,60 @@ static void print_encoders(struct json_object *arr)
 	}
 }
 
+static void print_crtcs(struct json_object *arr)
+{
+	printf(L_VAL "CRTCs\n");
+	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
+		struct json_object *obj = json_object_array_get_idx(arr, i);
+		bool last = i == json_object_array_length(arr) - 1;
+
+		uint32_t id = get_object_object_uint64(obj, "id");
+		struct json_object *props_obj = json_object_object_get(obj, "properties");
+
+		printf(L_LINE "%sCRTC %zu\n", last ? L_LAST : L_VAL, i);
+
+		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n",
+			last ? L_GAP : L_LINE, id);
+
+		print_properties(props_obj, last ? L_LINE L_GAP : L_LINE L_LINE);
+	}
+}
+
+static void print_planes(struct json_object *arr)
+{
+	printf(L_LAST "Planes\n");
+	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
+		struct json_object *obj = json_object_array_get_idx(arr, i);
+		bool last = i == json_object_array_length(arr) - 1;
+
+		uint32_t id = get_object_object_uint64(obj, "id");
+		uint32_t crtcs = get_object_object_uint64(obj, "possible_crtcs");
+		struct json_object *formats_arr = json_object_object_get(obj, "formats");
+		struct json_object *props_obj = json_object_object_get(obj, "properties");
+
+		printf(L_GAP "%sPlane %zu\n", last ? L_LAST : L_VAL, i);
+
+		printf(L_GAP "%s" L_VAL "Object ID: %"PRIu32"\n",
+			last ? L_GAP : L_LINE, id);
+		printf(L_GAP "%s" L_VAL "CRTCs: ", last ? L_GAP : L_LINE);
+		print_bitmask(crtcs);
+		printf("\n");
+
+		printf(L_GAP "%s" L_VAL "Formats:\n", last ? L_GAP : L_LINE);
+		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
+			uint32_t fmt = get_object_uint64(
+				json_object_array_get_idx(formats_arr, j));
+			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
+
+			printf(L_GAP "%s" L_LINE "%s%s\n", last ? L_GAP : L_LINE,
+				fmt_last ? L_LAST : L_VAL,
+				format_str(fmt));
+		}
+
+		print_properties(props_obj, last ? L_GAP L_GAP : L_GAP L_LINE);
+	}
+}
+
 static void print_node(const char *path, struct json_object *obj)
 {
 	printf("Node: %s\n", path);
@@ -588,6 +754,8 @@ static void print_node(const char *path, struct json_object *obj)
 	print_device(json_object_object_get(obj, "device"));
 	print_connectors(json_object_object_get(obj, "connectors"));
 	print_encoders(json_object_object_get(obj, "encoders"));
+	print_crtcs(json_object_object_get(obj, "crtcs"));
+	print_planes(json_object_object_get(obj, "planes"));
 }
 
 void print_drm(struct json_object *obj)
