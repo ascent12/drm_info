@@ -212,9 +212,204 @@ static void print_mode(struct json_object *obj)
 	}
 }
 
+/* Replace well-known constants with strings */
+static const char *u64_str(uint64_t val)
+{
+	switch (val) {
+	case INT8_MAX:   return "INT8_MAX";
+	case UINT8_MAX:  return "UINT8_MAX";
+	case INT16_MAX:  return "INT16_MAX";
+	case UINT16_MAX: return "UINT16_MAX";
+	case INT32_MAX:  return "INT32_MAX";
+	case UINT32_MAX: return "UINT32_MAX";
+	case INT64_MAX:  return "INT64_MAX";
+	case UINT64_MAX: return "UINT64_MAX";
+	default:         return NULL;
+	}
+}
+
+/* Replace well-known constants with strings */
+static const char *i64_str(int64_t val)
+{
+	switch (val) {
+	case INT8_MIN:   return "INT8_MIN";
+	case INT16_MIN:  return "INT16_MIN";
+	case INT32_MIN:  return "INT32_MIN";
+	case INT64_MIN:  return "INT64_MIN";
+	case INT8_MAX:   return "INT8_MAX";
+	case UINT8_MAX:  return "UINT8_MAX";
+	case INT16_MAX:  return "INT16_MAX";
+	case UINT16_MAX: return "UINT16_MAX";
+	case INT32_MAX:  return "INT32_MAX";
+	case UINT32_MAX: return "UINT32_MAX";
+	case INT64_MAX:  return "INT64_MAX";
+	default:         return NULL;
+	}
+}
+
+static const char *obj_str(uint32_t type)
+{
+	switch (type) {
+	case DRM_MODE_OBJECT_CRTC:      return "CRTC";
+	case DRM_MODE_OBJECT_CONNECTOR: return "connector";
+	case DRM_MODE_OBJECT_ENCODER:   return "encoder";
+	case DRM_MODE_OBJECT_MODE:      return "mode";
+	case DRM_MODE_OBJECT_PROPERTY:  return "property";
+	case DRM_MODE_OBJECT_FB:        return "framebuffer";
+	case DRM_MODE_OBJECT_BLOB:      return "blob";
+	case DRM_MODE_OBJECT_PLANE:     return "plane";
+	case DRM_MODE_OBJECT_ANY:       return "any";
+	default:                        return "unknown";
+	}
+}
+
 static void print_properties(struct json_object *obj, const char *prefix)
 {
-	// TODO
+	printf("%s" L_LAST "Properties\n", prefix);
+
+	struct json_object_iter iter;
+	json_object_object_foreachC(obj, iter) {
+		bool last = !iter.entry->next;
+		struct json_object *prop_obj = iter.val;
+
+		uint32_t flags = get_object_object_uint64(prop_obj, "flags");
+		uint32_t type = flags & (DRM_MODE_PROP_LEGACY_TYPE |
+			DRM_MODE_PROP_EXTENDED_TYPE);
+		bool atomic = flags & DRM_MODE_PROP_ATOMIC;
+		bool immutable = flags & DRM_MODE_PROP_IMMUTABLE;
+
+		printf("%s" L_GAP "%s\"%s\"", prefix, last ? L_LAST : L_VAL, iter.key);
+		if (atomic && immutable)
+			printf(" (atomic, immutable)");
+		else if (atomic)
+			printf(" (atomic)");
+		else if (immutable)
+			printf(" (immutable)");
+
+		printf(": ");
+
+		uint64_t raw_val = get_object_object_uint64(prop_obj, "raw_value");
+		struct json_object *spec_obj = json_object_object_get(prop_obj, "spec");
+		struct json_object *val_obj = json_object_object_get(prop_obj, "value");
+		struct json_object *data_obj = json_object_object_get(prop_obj, "data");
+		bool first;
+		switch (type) {
+		case DRM_MODE_PROP_RANGE:;
+			uint64_t min = get_object_object_uint64(spec_obj, "min");
+			uint64_t max = get_object_object_uint64(spec_obj, "max");
+			const char *min_str = u64_str(min);
+			const char *max_str = u64_str(max);
+
+			if (min_str)
+				printf("range [%s, ", min_str);
+			else
+				printf("range [%"PRIu64", ", min);
+
+			if (max_str)
+				printf("%s]", max_str);
+			else
+				printf("%"PRIu64"]", max);
+
+			if (data_obj != NULL)
+				printf(" = %"PRIu64"\n", get_object_uint64(data_obj));
+			else
+				printf(" = %"PRIu64"\n", get_object_uint64(val_obj));
+			break;
+		case DRM_MODE_PROP_ENUM:
+			printf("enum {");
+			const char *val_name = NULL;
+			first = true;
+			for (size_t j = 0; j < json_object_array_length(spec_obj); ++j) {
+				struct json_object *item_obj =
+					json_object_array_get_idx(spec_obj, j);
+				const char *item_name =
+					get_object_object_string(item_obj, "name");
+				uint64_t item_value =
+					get_object_object_uint64(item_obj, "value");
+
+				if (raw_val == item_value) {
+					val_name = item_name;
+				}
+
+				printf("%s%s", first ? "" : ", ", item_name);
+				first = false;
+			}
+			printf("} = ");
+
+			if (val_name) {
+				printf("%s\n", val_name);
+			} else {
+				printf("invalid (%"PRIu64")\n", raw_val);
+			}
+			break;
+		case DRM_MODE_PROP_BLOB:;
+			uint64_t blob_id = get_object_uint64(val_obj);
+			printf("blob = %" PRIu64 "\n", blob_id);
+			// TODO: special-cases for some blobs
+			break;
+		case DRM_MODE_PROP_BITMASK:
+			printf("bitmask {");
+			first = true;
+			for (size_t j = 0; j < json_object_array_length(spec_obj); ++j) {
+				struct json_object *item_obj =
+					json_object_array_get_idx(spec_obj, j);
+				const char *item_name =
+					get_object_object_string(item_obj, "name");
+
+				printf("%s%s", first ? "" : ", ", item_name);
+				first = false;
+			}
+			printf("} = (");
+
+			first = true;
+			for (size_t j = 0; j < json_object_array_length(spec_obj); ++j) {
+				struct json_object *item_obj =
+					json_object_array_get_idx(spec_obj, j);
+				const char *item_name =
+					get_object_object_string(item_obj, "name");
+				uint64_t item_value =
+					get_object_object_uint64(item_obj, "value");
+				if ((item_value & raw_val) != item_value) {
+					continue;
+				}
+
+				printf("%s%s", first ? "" : " | ", item_name);
+				first = false;
+			}
+
+			printf(")\n");
+			break;
+		case DRM_MODE_PROP_OBJECT:;
+			uint32_t obj_type = get_object_uint64(spec_obj);
+			printf("object %s = %"PRIu64"\n", obj_str(obj_type), raw_val);
+			break;
+		case DRM_MODE_PROP_SIGNED_RANGE:;
+			int64_t smin =
+				json_object_get_int64(json_object_object_get(spec_obj, "min"));
+			int64_t smax =
+				json_object_get_int64(json_object_object_get(spec_obj, "max"));
+			const char *smin_str = i64_str(smin);
+			const char *smax_str = i64_str(smax);
+
+			if (smin_str)
+				printf("range [%s, ", smin_str);
+			else
+				printf("range [%"PRIi64", ", smin);
+
+			if (smax_str)
+				printf("%s]", smax_str);
+			else
+				printf("%"PRIi64"]", smax);
+
+			if (data_obj != NULL)
+				printf(" = %"PRIi64"\n", json_object_get_int64(data_obj));
+			else
+				printf(" = %"PRIi64"\n", json_object_get_int64(val_obj));
+			break;
+		default:
+			printf("unknown type (%"PRIu32") = %"PRIu64"\n", type, raw_val);
+		}
+	}
 }
 
 static void print_modes(struct json_object *arr, const char *prefix)
@@ -244,7 +439,7 @@ static const char *conn_name(uint32_t type)
 	case DRM_MODE_CONNECTOR_LVDS:        return "LVDS";
 	case DRM_MODE_CONNECTOR_Component:   return "component";
 	case DRM_MODE_CONNECTOR_9PinDIN:     return "DIN";
-	case DRM_MODE_CONNECTOR_DisplayPort: return "DP";
+	case DRM_MODE_CONNECTOR_DisplayPort: return "DisplayPort";
 	case DRM_MODE_CONNECTOR_HDMIA:       return "HDMI-A";
 	case DRM_MODE_CONNECTOR_HDMIB:       return "HDMI-B";
 	case DRM_MODE_CONNECTOR_TV:          return "TV";
@@ -295,7 +490,7 @@ static void print_connectors(struct json_object *arr)
 		drmModeSubPixel subpixel = get_object_object_uint64(obj, "subpixel");
 		struct json_object *encs_arr = json_object_object_get(obj, "encoders");
 		struct json_object *modes_arr = json_object_object_get(obj, "modes");
-		struct json_object *props_arr = json_object_object_get(obj, "props");
+		struct json_object *props_arr = json_object_object_get(obj, "properties");
 
 		printf(L_LINE "%sConnector %zu\n", last ? L_LAST : L_VAL, i);
 
