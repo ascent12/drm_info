@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <json-c/json.h>
 #include <drm_fourcc.h>
@@ -254,6 +255,7 @@ static void print_mode(struct json_object *obj)
 static const char *format_str(uint32_t fmt)
 {
 	switch (fmt) {
+	case DRM_FORMAT_INVALID:     return "invalid";
 	case DRM_FORMAT_C8:          return "C8";
 	case DRM_FORMAT_R8:          return "R8";
 	case DRM_FORMAT_R16:         return "R16";
@@ -320,7 +322,7 @@ static const char *format_str(uint32_t fmt)
 	case DRM_FORMAT_YVU422:      return "YVU422";
 	case DRM_FORMAT_YUV444:      return "YUV444";
 	case DRM_FORMAT_YVU444:      return "YVU444";
-	default:                     return "Unknown";
+	default:                     return "unknown";
 	}
 }
 
@@ -375,6 +377,102 @@ static const char *obj_str(uint32_t type)
 	}
 }
 
+#if HAVE_LIBDRM_2_4_83
+static const char *modifier_str(uint64_t modifier)
+{
+	/*
+	 * ARM has a complex format which we can't be bothered to parse.
+	 */
+#if HAVE_LIBDRM_2_4_95
+	if ((modifier >> 56) == DRM_FORMAT_MOD_VENDOR_ARM) {
+		return "DRM_FORMAT_MOD_ARM_AFBC()";
+	}
+#endif
+
+	switch (modifier) {
+	case DRM_FORMAT_MOD_INVALID: return "DRM_FORMAT_MOD_INVALID";
+	case DRM_FORMAT_MOD_LINEAR: return "DRM_FORMAT_MOD_LINEAR";
+	case I915_FORMAT_MOD_X_TILED: return "I915_FORMAT_MOD_X_TILED";
+	case I915_FORMAT_MOD_Y_TILED: return "I915_FORMAT_MOD_Y_TILED";
+	case I915_FORMAT_MOD_Yf_TILED: return "I915_FORMAT_MOD_Yf_TILED";
+	case I915_FORMAT_MOD_Y_TILED_CCS: return "I915_FORMAT_MOD_Y_TILED_CCS";
+	case I915_FORMAT_MOD_Yf_TILED_CCS: return "I915_FORMAT_MOD_Yf_TILED_CSS";
+	case DRM_FORMAT_MOD_SAMSUNG_64_32_TILE: return "DRM_FORMAT_MOD_SAMSUNG_64_32_TILE";
+	// The following formats were added in 2.4.82, but IN_FORMATS wasn't added until 2.4.83
+	case DRM_FORMAT_MOD_VIVANTE_TILED: return "DRM_FORMAT_MOD_VIVANTE_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SUPER_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED";
+	case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED";
+	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED: return "DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED";
+#if HAVE_LIBDRM_2_4_91
+	case DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED: return "DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB";
+	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB";
+#endif
+#if HAVE_LIBDRM_2_4_95
+	case DRM_FORMAT_MOD_BROADCOM_SAND32: return "DRM_FORMAT_MOD_BROADCOM_SAND32";
+	case DRM_FORMAT_MOD_BROADCOM_SAND64: return "DRM_FORMAT_MOD_BROADCOM_SAND64";
+	case DRM_FORMAT_MOD_BROADCOM_SAND128: return "DRM_FORMAT_MOD_BROADCOM_SAND128";
+	case DRM_FORMAT_MOD_BROADCOM_SAND256: return "DRM_FORMAT_MOD_BROADCOM_SAND265";
+	case DRM_FORMAT_MOD_BROADCOM_UIF: return "DRM_FORMAT_MOD_BROADCOM_UIF";
+#endif
+	default: return "unknown";
+	}
+}
+
+static void print_in_formats(struct json_object *arr, const char *prefix)
+{
+	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
+		bool last = i == json_object_array_length(arr) - 1;
+		struct json_object *mod_obj = json_object_array_get_idx(arr, i);
+		uint64_t mod = get_object_object_uint64(mod_obj, "modifier");
+		struct json_object *formats_arr =
+			json_object_object_get(mod_obj, "formats");
+
+		printf("%s%s%s\n", prefix, last ? L_LAST : L_VAL, modifier_str(mod));
+		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
+			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
+			uint32_t fmt = get_object_uint64(
+				json_object_array_get_idx(formats_arr, j));
+			printf("%s%s%s%s\n", prefix, last ? L_GAP : L_LINE,
+				fmt_last ? L_LAST : L_VAL, format_str(fmt));
+		}
+	}
+}
+#else
+static void print_in_formats(struct json_object *arr, const char *prefix)
+{
+	(void)arr;
+	(void)prefix;
+}
+#endif
+
+static void print_mode_id(struct json_object *obj, const char *prefix)
+{
+	printf("%s" L_LAST, prefix);
+	print_mode(obj);
+	printf("\n");
+}
+
+static void print_writeback_pixel_formats(struct json_object *arr,
+		const char *prefix)
+{
+	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
+		bool last = i == json_object_array_length(arr) - 1;
+		uint32_t fmt = get_object_uint64(json_object_array_get_idx(arr, i));
+		printf("%s%s%s\n", prefix, last ? L_LAST : L_VAL, format_str(fmt));
+	}
+}
+
+static void print_path(struct json_object *obj, const char *prefix)
+{
+	printf("%s" L_LAST "%s\n", prefix, json_object_get_string(obj));
+}
+
 static void print_properties(struct json_object *obj, const char *prefix)
 {
 	printf("%s" L_LAST "Properties\n", prefix);
@@ -382,7 +480,12 @@ static void print_properties(struct json_object *obj, const char *prefix)
 	struct json_object_iter iter;
 	json_object_object_foreachC(obj, iter) {
 		bool last = !iter.entry->next;
+		const char *prop_name = iter.key;
 		struct json_object *prop_obj = iter.val;
+
+		char sub_prefix[strlen(prefix) + 2 * strlen(L_VAL) + 1];
+		snprintf(sub_prefix, sizeof(sub_prefix), "%s" L_GAP "%s",
+			prefix, last ? L_GAP : L_LINE);
 
 		uint32_t flags = get_object_object_uint64(prop_obj, "flags");
 		uint32_t type = flags & (DRM_MODE_PROP_LEGACY_TYPE |
@@ -390,7 +493,7 @@ static void print_properties(struct json_object *obj, const char *prefix)
 		bool atomic = flags & DRM_MODE_PROP_ATOMIC;
 		bool immutable = flags & DRM_MODE_PROP_IMMUTABLE;
 
-		printf("%s" L_GAP "%s\"%s\"", prefix, last ? L_LAST : L_VAL, iter.key);
+		printf("%s" L_GAP "%s\"%s\"", prefix, last ? L_LAST : L_VAL, prop_name);
 		if (atomic && immutable)
 			printf(" (atomic, immutable)");
 		else if (atomic)
@@ -455,9 +558,15 @@ static void print_properties(struct json_object *obj, const char *prefix)
 			}
 			break;
 		case DRM_MODE_PROP_BLOB:;
-			uint64_t blob_id = get_object_uint64(val_obj);
-			printf("blob = %" PRIu64 "\n", blob_id);
-			// TODO: special-cases for some blobs
+			printf("blob = %" PRIu64 "\n", raw_val);
+			if (strcmp(prop_name, "IN_FORMATS") == 0)
+				print_in_formats(data_obj, sub_prefix);
+			else if (strcmp(prop_name, "MODE_ID") == 0)
+				print_mode_id(data_obj, sub_prefix);
+			else if (strcmp(prop_name, "WRITEBACK_PIXEL_FORMATS") == 0)
+				print_writeback_pixel_formats(data_obj, sub_prefix);
+			else if (strcmp(prop_name, "PATH") == 0)
+				print_path(data_obj, sub_prefix);
 			break;
 		case DRM_MODE_PROP_BITMASK:
 			printf("bitmask {");
