@@ -381,6 +381,9 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		struct json_object *data_obj = NULL;
 		switch (type) {
 		case DRM_MODE_PROP_BLOB:
+			if (!value) {
+				break;
+			}
 			if (strcmp(prop->name, "IN_FORMATS") == 0) {
 				data_obj = in_formats_info(fd, value);
 			} else if (strcmp(prop->name, "MODE_ID") == 0) {

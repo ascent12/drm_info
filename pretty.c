@@ -559,6 +559,8 @@ static void print_properties(struct json_object *obj, const char *prefix)
 			break;
 		case DRM_MODE_PROP_BLOB:;
 			printf("blob = %" PRIu64 "\n", raw_val);
+			if (!data_obj)
+				break;
 			if (strcmp(prop_name, "IN_FORMATS") == 0)
 				print_in_formats(data_obj, sub_prefix);
 			else if (strcmp(prop_name, "MODE_ID") == 0)
