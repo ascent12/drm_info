@@ -699,7 +699,21 @@ static const char *conn_subpixel(drmModeSubPixel subpixel)
 	}
 }
 
-static void print_connectors(struct json_object *arr)
+static ssize_t find_encoder_index(struct json_object *encoders_arr,
+		uint32_t enc_id)
+{
+	for (size_t i = 0; i < json_object_array_length(encoders_arr); ++i) {
+		struct json_object *obj = json_object_array_get_idx(encoders_arr, i);
+		uint32_t id = get_object_object_uint64(obj, "id");
+		if (enc_id == id) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static void print_connectors(struct json_object *arr,
+		struct json_object *encoders_arr)
 {
 	printf(L_VAL "Connectors\n");
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
@@ -736,7 +750,8 @@ static void print_connectors(struct json_object *arr)
 		for (size_t j = 0; j < json_object_array_length(encs_arr); ++j) {
 			uint32_t enc_id = get_object_uint64(
 				json_object_array_get_idx(encs_arr, j));
-			printf("%s%"PRIu32, first ? "" : ", ", enc_id);
+			printf("%s%zi", first ? "" : ", ",
+				find_encoder_index(encoders_arr, enc_id));
 			first = false;
 		}
 		printf("}\n");
@@ -864,8 +879,9 @@ static void print_node(const char *path, struct json_object *obj)
 	printf("Node: %s\n", path);
 	print_driver(json_object_object_get(obj, "driver"));
 	print_device(json_object_object_get(obj, "device"));
-	print_connectors(json_object_object_get(obj, "connectors"));
-	print_encoders(json_object_object_get(obj, "encoders"));
+	struct json_object *encs_arr = json_object_object_get(obj, "encoders");
+	print_connectors(json_object_object_get(obj, "connectors"), encs_arr);
+	print_encoders(encs_arr);
 	print_crtcs(json_object_object_get(obj, "crtcs"));
 	print_planes(json_object_object_get(obj, "planes"));
 }
