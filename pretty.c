@@ -7,46 +7,9 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include "compat.h"
 #include "config.h"
 #include "drm_info.h"
-
-// Defines for comaptibility with old libdrm
-
-// drm.h
-
-#ifndef DRM_CAP_CRTC_IN_VBLANK_EVENT
-#define DRM_CAP_CRTC_IN_VBLANK_EVENT 0x12
-#endif
-
-#ifndef DRM_CAP_SYNCOBJ
-#define DRM_CAP_SYNCOBJ 0x13
-#endif
-
-#ifndef DRM_CLIENT_CAP_ASPECT_RATIO
-#define DRM_CLIENT_CAP_ASPECT_RATIO 4
-#endif
-
-#ifndef DRM_CLIENT_CAP_WRITEBACK_CONNECTORS
-#define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS 5
-#endif
-
-#ifndef DRM_MODE_CONNECTOR_WRITEBACK
-#define DRM_MODE_CONNECTOR_WRITEBACK 18
-#endif
-
-// drm_fourcc.h
-
-#ifndef DRM_FORMAT_R16
-#define DRM_FORMAT_R16 fourcc_code('R', '1', '6', ' ')
-#endif
-
-#ifndef DRM_FORMAT_RG1616
-#define DRM_FORMAT_RG1616 fourcc_code('R', 'G', '3', '2')
-#endif
-
-#ifndef DRM_FORMAT_GR1616
-#define DRM_FORMAT_GR1616 fourcc_code('G', 'R', '3', '2')
-#endif
 
 #define L_LINE "│   "
 #define L_VAL  "├───"
@@ -377,17 +340,14 @@ static const char *obj_str(uint32_t type)
 	}
 }
 
-#if HAVE_LIBDRM_2_4_83
 static const char *modifier_str(uint64_t modifier)
 {
 	/*
 	 * ARM has a complex format which we can't be bothered to parse.
 	 */
-#if HAVE_LIBDRM_2_4_95
 	if ((modifier >> 56) == DRM_FORMAT_MOD_VENDOR_ARM) {
 		return "DRM_FORMAT_MOD_ARM_AFBC()";
 	}
-#endif
 
 	switch (modifier) {
 	case DRM_FORMAT_MOD_INVALID: return "DRM_FORMAT_MOD_INVALID";
@@ -404,7 +364,6 @@ static const char *modifier_str(uint64_t modifier)
 	case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED";
 	case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED: return "DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED";
 	case DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED: return "DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED";
-#if HAVE_LIBDRM_2_4_91
 	case DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED: return "DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB";
@@ -412,14 +371,12 @@ static const char *modifier_str(uint64_t modifier)
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB";
 	case DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB: return "DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB";
-#endif
-#if HAVE_LIBDRM_2_4_95
 	case DRM_FORMAT_MOD_BROADCOM_SAND32: return "DRM_FORMAT_MOD_BROADCOM_SAND32";
 	case DRM_FORMAT_MOD_BROADCOM_SAND64: return "DRM_FORMAT_MOD_BROADCOM_SAND64";
 	case DRM_FORMAT_MOD_BROADCOM_SAND128: return "DRM_FORMAT_MOD_BROADCOM_SAND128";
 	case DRM_FORMAT_MOD_BROADCOM_SAND256: return "DRM_FORMAT_MOD_BROADCOM_SAND265";
 	case DRM_FORMAT_MOD_BROADCOM_UIF: return "DRM_FORMAT_MOD_BROADCOM_UIF";
-#endif
+	case DRM_FORMAT_MOD_ALLWINNER_TILED: return "DRM_FORMAT_MOD_ALLWINNER_TILED";
 	default: return "unknown";
 	}
 }
@@ -444,13 +401,6 @@ static void print_in_formats(struct json_object *arr, const char *prefix)
 		}
 	}
 }
-#else
-static void print_in_formats(struct json_object *arr, const char *prefix)
-{
-	(void)arr;
-	(void)prefix;
-}
-#endif
 
 static void print_mode_id(struct json_object *obj, const char *prefix)
 {

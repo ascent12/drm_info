@@ -12,32 +12,9 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include "compat.h"
 #include "config.h"
 #include "drm_info.h"
-
-// Defines for comaptibility with old libdrm
-
-// drm.h
-
-#ifndef DRM_CAP_CRTC_IN_VBLANK_EVENT
-#define DRM_CAP_CRTC_IN_VBLANK_EVENT 0x12
-#endif
-
-#ifndef DRM_CAP_SYNCOBJ
-#define DRM_CAP_SYNCOBJ 0x13
-#endif
-
-#ifndef DRM_CLIENT_CAP_ASPECT_RATIO
-#define DRM_CLIENT_CAP_ASPECT_RATIO 4
-#endif
-
-#ifndef DRM_CLIENT_CAP_WRITEBACK_CONNECTORS
-#define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS 5
-#endif
-
-#ifndef DRM_MODE_CONNECTOR_WRITEBACK
-#define DRM_MODE_CONNECTOR_WRITEBACK 18
-#endif
 
 static const struct {
 	const char *name;
@@ -172,7 +149,7 @@ static struct json_object *device_info(int fd)
 	return obj;
 }
 
-#if HAVE_LIBDRM_2_4_83
+#if LIBDRM_VERSION >= VERSION(2, 4, 83)
 static struct json_object *in_formats_info(int fd, uint32_t blob_id)
 {
 	struct json_object *arr = json_object_new_array();
