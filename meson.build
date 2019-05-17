@@ -13,13 +13,10 @@ conf = configuration_data()
 libdrm = dependency('libdrm', version: '>= 2.4.74')
 jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
 
-# These specific versions added more modifiers, so we check for these instead
-# of using #ifdef on every single one
-foreach version: ['2.4.83', '2.4.91', '2.4.95']
-  conf.set10('HAVE_LIBDRM_' + version.underscorify(),
-    libdrm.version().version_compare('>=' + version)
-  )
-endforeach
+libdrm_ver = libdrm.version().split('.')
+conf.set('LIBDRM_MAJ', libdrm_ver[0])
+conf.set('LIBDRM_MIN', libdrm_ver[1])
+conf.set('LIBDRM_PAT', libdrm_ver[2])
 
 config_h = configure_file(
   configuration: conf,
