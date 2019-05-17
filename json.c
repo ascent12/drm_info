@@ -603,18 +603,30 @@ static struct json_object *node_info(const char *path)
 	return obj;
 }
 
-struct json_object *drm_info(void)
+/* paths is a NULL terminated argv array */
+struct json_object *drm_info(char *paths[])
 {
 	struct json_object *obj = json_object_new_object();
 
-	char path[PATH_MAX];
-	for (int i = 0;; ++i) {
-		snprintf(path, sizeof path, DRM_DEV_NAME, DRM_DIR_NAME, i);
-		if (access(path, R_OK) < 0)
-			break;
+	/* Print everything by default */
+	if (!paths[0]) {
+		char path[PATH_MAX];
+		for (int i = 0;; ++i) {
+			snprintf(path, sizeof path, DRM_DEV_NAME, DRM_DIR_NAME, i);
+			if (access(path, R_OK) < 0)
+				break;
 
-		struct json_object *dev = node_info(path);
-		json_object_object_add(obj, path, dev);
+			struct json_object *dev = node_info(path);
+			json_object_object_add(obj, path, dev);
+		}
+	} else {
+		for (char **path = paths; *path; ++path) {
+			struct json_object *dev = node_info(*path);
+			if (!dev)
+				continue;
+
+			json_object_object_add(obj, *path, dev);
+		}
 	}
 
 	return obj;

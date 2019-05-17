@@ -3,7 +3,7 @@
 
 struct json_object;
 
-struct json_object *drm_info(void);
+struct json_object *drm_info(char *paths[]);
 void print_drm(struct json_object *obj);
 
 #endif

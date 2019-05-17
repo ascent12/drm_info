@@ -19,12 +19,12 @@ int main(int argc, char *argv[])
 			json = true;
 			break;
 		default:
-			fprintf(stderr, "usage: drm_info [-j]\n");
+			fprintf(stderr, "usage: drm_info [-j] [--] [path]...\n");
 			exit(opt == '?' ? EXIT_SUCCESS : EXIT_FAILURE);
 		}
 	}
 
-	struct json_object *obj = drm_info();
+	struct json_object *obj = drm_info(&argv[optind]);
 	if (json) {
 		json_object_to_fd(STDOUT_FILENO, obj,
 			JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED);
