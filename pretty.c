@@ -433,13 +433,14 @@ static void print_in_formats(struct json_object *arr, const char *prefix)
 		struct json_object *formats_arr =
 			json_object_object_get(mod_obj, "formats");
 
-		printf("%s%s%s\n", prefix, last ? L_LAST : L_VAL, modifier_str(mod));
+		printf("%s%s%s (0x%"PRIx64")\n", prefix, last ? L_LAST : L_VAL,
+			modifier_str(mod), mod);
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
 			uint32_t fmt = get_object_uint64(
 				json_object_array_get_idx(formats_arr, j));
-			printf("%s%s%s%s\n", prefix, last ? L_GAP : L_LINE,
-				fmt_last ? L_LAST : L_VAL, format_str(fmt));
+			printf("%s%s%s%s (0x%08"PRIx32")\n", prefix, last ? L_GAP : L_LINE,
+				fmt_last ? L_LAST : L_VAL, format_str(fmt), fmt);
 		}
 	}
 }
@@ -464,7 +465,8 @@ static void print_writeback_pixel_formats(struct json_object *arr,
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
 		bool last = i == json_object_array_length(arr) - 1;
 		uint32_t fmt = get_object_uint64(json_object_array_get_idx(arr, i));
-		printf("%s%s%s\n", prefix, last ? L_LAST : L_VAL, format_str(fmt));
+		printf("%s%s%s (0x%08"PRIx32")\n", prefix, last ? L_LAST : L_VAL,
+			format_str(fmt), fmt);
 	}
 }
 
@@ -865,9 +867,9 @@ static void print_planes(struct json_object *arr)
 				json_object_array_get_idx(formats_arr, j));
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
 
-			printf(L_GAP "%s" L_LINE "%s%s\n", last ? L_GAP : L_LINE,
+			printf(L_GAP "%s" L_LINE "%s%s (0x%08"PRIx32")\n", last ? L_GAP : L_LINE,
 				fmt_last ? L_LAST : L_VAL,
-				format_str(fmt));
+				format_str(fmt), fmt);
 		}
 
 		print_properties(props_obj, last ? L_GAP L_GAP : L_GAP L_LINE);
