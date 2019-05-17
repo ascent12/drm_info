@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <json-c/json.h>
+#include <json.h>
 #include <drm_fourcc.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
