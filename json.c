@@ -92,13 +92,13 @@ static struct json_object *new_json_object_uint64(uint64_t u)
 
 static struct json_object *driver_info(int fd)
 {
-	struct json_object *obj = json_object_new_object();
-
 	drmVersion *ver = drmGetVersion(fd);
 	if (!ver) {
 		perror("drmGetVersion");
 		return NULL;
 	}
+
+	struct json_object *obj = json_object_new_object();
 
 	json_object_object_add(obj, "name", json_object_new_string(ver->name));
 	json_object_object_add(obj, "desc", json_object_new_string(ver->desc));
@@ -297,13 +297,13 @@ static struct json_object *path_info(int fd, uint32_t blob_id)
 
 static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 {
-	struct json_object *obj = json_object_new_object();
-
 	drmModeObjectProperties *props = drmModeObjectGetProperties(fd, id, type);
 	if (!props) {
 		perror("drmModeObjectGetProperties");
 		return NULL;
 	}
+
+	struct json_object *obj = json_object_new_object();
 
 	for (uint32_t i = 0; i < props->count_props; ++i) {
 		drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
@@ -526,13 +526,13 @@ static struct json_object *crtcs_info(int fd, drmModeRes *res)
 
 static struct json_object *planes_info(int fd)
 {
-	struct json_object *arr = json_object_new_array();
-
 	drmModePlaneRes *res = drmModeGetPlaneResources(fd);
 	if (!res) {
 		perror("drmModeGetPlaneResources");
 		return NULL;
 	}
+
+	struct json_object *arr = json_object_new_array();
 
 	for (uint32_t i = 0; i < res->count_planes; ++i) {
 		drmModePlane *plane = drmModeGetPlane(fd, res->planes[i]);
@@ -571,13 +571,13 @@ static struct json_object *planes_info(int fd)
 
 static struct json_object *node_info(const char *path)
 {
-	struct json_object *obj = json_object_new_object();
-
 	int fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		perror(path);
 		return NULL;
 	}
+
+	struct json_object *obj = json_object_new_object();
 
 	// Get driver info before getting resources, as it'll try to enable some
 	// DRM client capabilities
@@ -588,6 +588,8 @@ static struct json_object *node_info(const char *path)
 	drmModeRes *res = drmModeGetResources(fd);
 	if (!res) {
 		perror("drmModeGetResources");
+		close(fd);
+		json_object_put(obj);
 		return NULL;
 	}
 
@@ -617,6 +619,9 @@ struct json_object *drm_info(char *paths[])
 				break;
 
 			struct json_object *dev = node_info(path);
+			if (!dev)
+				continue;
+
 			json_object_object_add(obj, path, dev);
 		}
 	} else {
