@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <json-c/json_object.h>
+#include <json_object.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 

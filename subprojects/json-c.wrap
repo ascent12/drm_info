@@ -1,0 +1,10 @@
+[wrap-file]
+directory = json-c-0.13.1
+
+source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.13.1.tar.gz
+source_filename = json-c-0.13.1.tar.gz
+source_hash = b87e608d4d3f7bfdd36ef78d56d53c74e66ab278d318b71e6002a369d36f4873
+
+patch_url = https://github.com/ascent12/json-c/releases/download/0.13.1-1/json-c_0.13.1-1_meson.tar.gz
+patch_filename = json-c_0.13.1-1_meson.tar.gz
+patch_hash = 35b3fb0163a8c0359b10f348236a04990d313cb5c56c6fd2e437375f4e9932a6

@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <json-c/json_util.h>
+#include <json_object.h>
+#include <json_util.h>
 
 #include "drm_info.h"
 

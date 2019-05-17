@@ -11,7 +11,7 @@ add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 conf = configuration_data()
 libdrm = dependency('libdrm', version: '>= 2.4.74')
-jsonc = dependency('json-c', version: '>=0.13')
+jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
 
 # These specific versions added more modifiers, so we check for these instead
 # of using #ifdef on every single one
