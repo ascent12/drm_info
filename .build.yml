@@ -1,0 +1,14 @@
+image: debian/stable
+packages:
+  - libdrm-dev
+  - meson
+  - pkgconf
+sources:
+  - https://github.com/ascent12/drm_info
+tasks:
+  - setup: |
+      cd drm_info
+      meson build
+  - build: |
+      cd drm_info
+      ninja -C build
