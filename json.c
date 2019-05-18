@@ -344,14 +344,21 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		}
 		json_object_object_add(prop_obj, "spec", spec_obj);
 
-		struct json_object *value_obj;
+		struct json_object *value_obj = NULL;
 		switch (type) {
-		// TODO: DRM_MODE_PROP_BLOB
+		case DRM_MODE_PROP_RANGE:
+		case DRM_MODE_PROP_ENUM:
+		case DRM_MODE_PROP_BITMASK:
+		case DRM_MODE_PROP_OBJECT:
+			value_obj = new_json_object_uint64(value);
+			break;
+		case DRM_MODE_PROP_BLOB:
+			// TODO: base64-encode blob contents
+			value_obj = NULL;
+			break;
 		case DRM_MODE_PROP_SIGNED_RANGE:
 			value_obj = json_object_new_int64((int64_t)value);
 			break;
-		default:
-			value_obj = new_json_object_uint64(value);
 		}
 		json_object_object_add(prop_obj, "value", value_obj);
 
