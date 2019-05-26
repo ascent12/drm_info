@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 #include <json_object.h>
@@ -67,6 +68,24 @@ static struct json_object *new_json_object_uint64(uint64_t u)
 	return obj;
 }
 
+static struct json_object *kernel_info(void)
+{
+	struct utsname utsname;
+	if (uname(&utsname) != 0) {
+		perror("uname");
+		return NULL;
+	}
+
+	struct json_object *obj = json_object_new_object();
+	json_object_object_add(obj, "sysname",
+		json_object_new_string(utsname.sysname));
+	json_object_object_add(obj, "release",
+		json_object_new_string(utsname.release));
+	json_object_object_add(obj, "version",
+		json_object_new_string(utsname.version));
+	return obj;
+}
+
 static struct json_object *driver_info(int fd)
 {
 	drmVersion *ver = drmGetVersion(fd);
@@ -92,6 +111,8 @@ static struct json_object *driver_info(int fd)
 	json_object_object_add(obj, "version", ver_obj);
 
 	drmFreeVersion(ver);
+
+	json_object_object_add(obj, "kernel", kernel_info());
 
 	struct json_object *client_caps_obj = json_object_new_object();
 	for (size_t i = 0; i < sizeof(client_caps) / sizeof(client_caps[0]); ++i) {
