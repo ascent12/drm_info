@@ -98,6 +98,14 @@ static void print_device(struct json_object *obj)
 		uint16_t device = get_object_object_uint64(data_obj, "device");
 		printf(" %04x:%04x", vendor, device);
 		break;
+	case DRM_BUS_PLATFORM:;
+		struct json_object *compatible_arr =
+			json_object_object_get(data_obj, "compatible");
+		for (size_t i = 0; i < json_object_array_length(compatible_arr); i++) {
+			printf(" %s", json_object_get_string(
+				json_object_array_get_idx(compatible_arr, i)));
+		}
+		break;
 	}
 	printf("\n");
 }
