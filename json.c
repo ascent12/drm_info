@@ -162,6 +162,17 @@ static struct json_object *device_info(int fd)
 		json_object_object_add(device_data_obj, "subsystem_device",
 			new_json_object_uint64(pci->subdevice_id));
 		break;
+#if LIBDRM_VERSION >= VERSION(2, 4, 75)
+	case DRM_BUS_PLATFORM:;
+		drmPlatformDeviceInfo *platform = dev->deviceinfo.platform;
+		device_data_obj = json_object_new_object();
+		struct json_object *compatible_arr = json_object_new_array();
+		for (size_t i = 0; platform->compatible[i]; ++i)
+			json_object_array_add(compatible_arr,
+				json_object_new_string(platform->compatible[i]));
+		json_object_object_add(device_data_obj, "compatible", compatible_arr);
+		break;
+#endif
 	}
 	json_object_object_add(obj, "device_data", device_data_obj);
 
