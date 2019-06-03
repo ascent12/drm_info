@@ -1,5 +1,5 @@
 project('drm_info', 'c',
-  version: '2.0.1',
+  version: '2.1.0',
   license: 'MIT',
   default_options: [
     'c_std=c11',
