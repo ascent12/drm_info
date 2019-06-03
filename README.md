@@ -32,3 +32,19 @@ drm_info [-j] [--] [path]...
 - `path` - Zero or more paths to a DRM device to print info about, e.g.
 `/dev/dri/card0`. If no paths are given, all devices found in
 `/dev/dri/card*` are printed.
+
+## DRM database
+
+[drmdb](https://drmdb.emersion.fr) is a database of Direct Rendering Manager
+dumps. This database is used to keep track of GPUs and DRM driver features
+support.
+
+Please help us gather more data! You can do so by uploading DRM information
+from your GPU.
+
+```
+drm_info -j | curl -X POST -d @- https://drmdb.emersion.fr/submit
+```
+
+This will upload information about your GPUs, your GPU drivers and your
+screens.
