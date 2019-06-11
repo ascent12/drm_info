@@ -628,18 +628,28 @@ struct json_object *drm_info(char *paths[])
 
 	/* Print everything by default */
 	if (!paths[0]) {
-		char path[PATH_MAX];
-		for (int i = 0;; ++i) {
-			snprintf(path, sizeof path, DRM_DEV_NAME, DRM_DIR_NAME, i);
-			if (access(path, R_OK) < 0)
-				break;
+		drmDevice *devices[64];
+		int n = drmGetDevices(devices, sizeof(devices) / sizeof(devices[0]));
+		if (n < 0) {
+			perror("drmGetDevices");
+			json_object_put(obj);
+			return NULL;
+		}
 
-			struct json_object *dev = node_info(path);
-			if (!dev)
+		for (int i = 0; i < n; ++i) {
+			drmDevice *dev = devices[i];
+			if (!(dev->available_nodes & (1 << DRM_NODE_PRIMARY)))
 				continue;
 
-			json_object_object_add(obj, path, dev);
+			const char *path = dev->nodes[DRM_NODE_PRIMARY];
+			struct json_object *dev_obj = node_info(path);
+			if (!dev_obj)
+				continue;
+
+			json_object_object_add(obj, path, dev_obj);
 		}
+
+		drmFreeDevices(devices, n);
 	} else {
 		for (char **path = paths; *path; ++path) {
 			struct json_object *dev = node_info(*path);
