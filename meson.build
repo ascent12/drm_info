@@ -23,8 +23,15 @@ config_h = configure_file(
   output: 'config.h',
 )
 
+drm_fourcc_h_path = join_paths(libdrm.get_pkgconfig_variable('includedir'), 'libdrm/drm_fourcc.h')
+fourcc_py = join_paths(meson.source_root(), 'fourcc.py')
+
+tables_h = custom_target('tables_h',
+  output : 'tables.h',
+  command : [fourcc_py, drm_fourcc_h_path, '@OUTPUT@'])
+
 executable('drm_info',
-  files('main.c', 'json.c', 'pretty.c'),
+  [files('main.c', 'json.c', 'pretty.c'), tables_h],
   dependencies: [libdrm, jsonc],
   install: true,
 )
