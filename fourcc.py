@@ -12,19 +12,9 @@ fmt = re.compile(r'^#define (\w+)\s*(?:\\$\s*)?fourcc_code', flags=re.M)
 mod = re.compile(r'^#define (\w+)\s*(?:\\$\s*)?fourcc_mod_code', flags=re.M)
 mod_broadcom = re.compile(r'^#define (DRM_FORMAT_MOD_BROADCOM\w+(?=\s))', flags=re.M)
 
-with open(fourcc_include) as f:
-	for l in f.readlines():
-		ident = fmt.search(l)
-		if ident != None:
-			fmt_list.append(ident.group(1))
-			continue
-		ident = mod.search(l)
-		if ident != None:
-			mod_list.append(ident.group(1))
-			continue
-		ident = mod_broadcom.search(l)
-		if ident != None:
-			mod_list.append(ident.group(1))
+f = open(fourcc_include).read()
+fmt_list = fmt.findall(f)
+mod_list = set(mod.findall(f) + mod_broadcom.findall(f))
 
 f_name = sys.argv[2]
 
