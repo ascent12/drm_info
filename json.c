@@ -45,6 +45,7 @@ static const struct {
 	{ "PAGE_FLIP_TARGET", DRM_CAP_PAGE_FLIP_TARGET },
 	{ "CRTC_IN_VBLANK_EVENT", DRM_CAP_CRTC_IN_VBLANK_EVENT },
 	{ "SYNCOBJ", DRM_CAP_SYNCOBJ },
+	{ "SYNCOBJ_TIMELINE", DRM_CAP_SYNCOBJ_TIMELINE },
 };
 
 static int json_object_uint_to_json_string(struct json_object *obj,
