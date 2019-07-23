@@ -456,6 +456,8 @@ static struct json_object *connectors_info(int fd, drmModeRes *res)
 			new_json_object_uint64(conn->mmHeight));
 		json_object_object_add(conn_obj, "subpixel",
 			new_json_object_uint64(conn->subpixel));
+		json_object_object_add(conn_obj, "encoder_id",
+			new_json_object_uint64(conn->encoder_id));
 
 		struct json_object *encoders_arr = json_object_new_array();
 		for (int j = 0; j < conn->count_encoders; ++j) {
@@ -500,6 +502,8 @@ static struct json_object *encoders_info(int fd, drmModeRes *res)
 			new_json_object_uint64(enc->encoder_id));
 		json_object_object_add(enc_obj, "type",
 			new_json_object_uint64(enc->encoder_type));
+		json_object_object_add(enc_obj, "crtc_id",
+			new_json_object_uint64(enc->crtc_id));
 		json_object_object_add(enc_obj, "possible_crtcs",
 			new_json_object_uint64(enc->possible_crtcs));
 		json_object_object_add(enc_obj, "possible_clones",
@@ -528,6 +532,19 @@ static struct json_object *crtcs_info(int fd, drmModeRes *res)
 
 		json_object_object_add(crtc_obj, "id",
 			new_json_object_uint64(crtc->crtc_id));
+		json_object_object_add(crtc_obj, "fb_id",
+			new_json_object_uint64(crtc->buffer_id));
+		json_object_object_add(crtc_obj, "x",
+			new_json_object_uint64(crtc->x));
+		json_object_object_add(crtc_obj, "y",
+			new_json_object_uint64(crtc->y));
+		if (crtc->mode_valid) {
+			json_object_object_add(crtc_obj, "mode", mode_info(&crtc->mode));
+		} else {
+			json_object_object_add(crtc_obj, "mode", NULL);
+		}
+		json_object_object_add(crtc_obj, "gamma_size",
+			json_object_new_int(crtc->gamma_size));
 
 		struct json_object *props_obj = properties_info(fd,
 			crtc->crtc_id, DRM_MODE_OBJECT_CRTC);
@@ -564,6 +581,20 @@ static struct json_object *planes_info(int fd)
 			new_json_object_uint64(plane->plane_id));
 		json_object_object_add(plane_obj, "possible_crtcs",
 			new_json_object_uint64(plane->possible_crtcs));
+		json_object_object_add(plane_obj, "crtc_id",
+			new_json_object_uint64(plane->crtc_id));
+		json_object_object_add(plane_obj, "fb_id",
+			new_json_object_uint64(plane->fb_id));
+		json_object_object_add(plane_obj, "crtc_x",
+			new_json_object_uint64(plane->crtc_x));
+		json_object_object_add(plane_obj, "crtc_y",
+			new_json_object_uint64(plane->crtc_y));
+		json_object_object_add(plane_obj, "x",
+			new_json_object_uint64(plane->x));
+		json_object_object_add(plane_obj, "y",
+			new_json_object_uint64(plane->y));
+		json_object_object_add(plane_obj, "gamma_size",
+			new_json_object_uint64(plane->gamma_size));
 
 		struct json_object *formats_arr = json_object_new_array();
 		for (uint32_t j = 0; j < plane->count_formats; ++j) {
