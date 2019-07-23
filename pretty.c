@@ -681,6 +681,13 @@ static void print_crtcs(struct json_object *arr)
 		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n",
 			last ? L_GAP : L_LINE, id);
 
+		struct json_object *mode_obj = json_object_object_get(obj, "mode");
+		if (mode_obj) {
+			printf(L_LINE "%s" L_VAL "Mode: ", last ? L_GAP : L_LINE);
+			print_mode(mode_obj);
+			printf("\n");
+		}
+
 		print_properties(props_obj, last ? L_LINE L_GAP : L_LINE L_LINE);
 	}
 }
