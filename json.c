@@ -641,6 +641,17 @@ static struct json_object *node_info(const char *path)
 		return NULL;
 	}
 
+	struct json_object *fb_size_obj = json_object_new_object();
+	json_object_object_add(fb_size_obj, "min_width",
+		new_json_object_uint64(res->min_width));
+	json_object_object_add(fb_size_obj, "max_width",
+		new_json_object_uint64(res->max_width));
+	json_object_object_add(fb_size_obj, "min_height",
+		new_json_object_uint64(res->min_height));
+	json_object_object_add(fb_size_obj, "max_height",
+		new_json_object_uint64(res->max_height));
+	json_object_object_add(obj, "fb_size", fb_size_obj);
+
 	json_object_object_add(obj, "connectors", connectors_info(fd, res));
 	json_object_object_add(obj, "encoders", encoders_info(fd, res));
 	json_object_object_add(obj, "crtcs", crtcs_info(fd, res));
