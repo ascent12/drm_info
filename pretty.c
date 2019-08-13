@@ -732,6 +732,16 @@ static void print_node(const char *path, struct json_object *obj)
 	printf("Node: %s\n", path);
 	print_driver(json_object_object_get(obj, "driver"));
 	print_device(json_object_object_get(obj, "device"));
+
+	printf(L_VAL "Framebuffer size\n");
+	struct json_object *fb_size_obj = json_object_object_get(obj, "fb_size");
+	printf(L_LINE L_VAL "Width: [%"PRIu64", %"PRIu64"]\n",
+		get_object_object_uint64(fb_size_obj, "min_width"),
+		get_object_object_uint64(fb_size_obj, "max_width"));
+	printf(L_LINE L_LAST "Height: [%"PRIu64", %"PRIu64"]\n",
+		get_object_object_uint64(fb_size_obj, "min_height"),
+		get_object_object_uint64(fb_size_obj, "max_height"));
+
 	struct json_object *encs_arr = json_object_object_get(obj, "encoders");
 	print_connectors(json_object_object_get(obj, "connectors"), encs_arr);
 	print_encoders(encs_arr);
