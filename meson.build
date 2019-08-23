@@ -1,6 +1,7 @@
 project('drm_info', 'c',
   version: '2.1.0',
   license: 'MIT',
+  meson_version: '>=0.46.0',
   default_options: [
     'c_std=c11',
     'warning_level=2',
