@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
 	}
 
 	struct json_object *obj = drm_info(&argv[optind]);
+	if (!obj) {
+		exit(EXIT_FAILURE);
+	}
 	if (json) {
 		json_object_to_fd(STDOUT_FILENO, obj,
 			JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_SPACED);
