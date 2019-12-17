@@ -8,6 +8,7 @@ sources:
 tasks:
   - setup: |
       cd drm_info
+      meson subprojects download
       meson build
   - build: |
       cd drm_info

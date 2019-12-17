@@ -7,8 +7,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#include "compat.h"
-#include "config.h"
 #include "drm_info.h"
 #include "tables.h"
 

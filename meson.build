@@ -1,7 +1,7 @@
 project('drm_info', 'c',
   version: '2.1.0',
   license: 'MIT',
-  meson_version: '>=0.46.0',
+  meson_version: '>=0.49.0',
   default_options: [
     'c_std=c11',
     'warning_level=2',
@@ -10,30 +10,67 @@ project('drm_info', 'c',
 
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
-conf = configuration_data()
-libdrm = dependency('libdrm', version: '>= 2.4.74')
 jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
-
-libdrm_ver = libdrm.version().split('.')
-conf.set('LIBDRM_MAJ', libdrm_ver[0])
-conf.set('LIBDRM_MIN', libdrm_ver[1])
-conf.set('LIBDRM_PAT', libdrm_ver[2])
-
-config_h = configure_file(
-  configuration: conf,
-  output: 'config.h',
+libdrm = dependency('libdrm',
+  fallback: ['libdrm', 'ext_libdrm'],
+  default_options: [
+    'libkms=false',
+    'intel=false',
+    'radeon=false',
+    'amdgpu=false',
+    'nouveau=false',
+    'vmwgfx=false',
+    'omap=false',
+    'exynos=false',
+    'freedreno=false',
+    'tegra=false',
+    'vc4=false',
+    'etnaviv=false',
+    'cairo-tests=false',
+    'man-pages=false',
+    'valgrind=false',
+  ],
 )
 
+inc = []
+# libdrm pretty consistently pulls in the linux userspace API headers.
+# We want a new libdrm to get all of the #defines in those headers, but
+# we don't actually need to link against a new version of libdrm itself.
+#
+# We need to make sure we don't use any new libdrm functions, but those
+# are added very infrequently, so this is unlikely to be an issue.
+if libdrm.version().version_compare('<2.4.99')
+  if libdrm.type_name() == 'internal'
+    error('libdrm subproject out of date. Run `meson subprojects update`.')
+  endif
+
+  msg = [
+    'System libdrm version does not have latest Linux DRM headers.',
+    'Attempting to use headers from meson subproject if present.',
+    'If this fails, update your system libdrm or run `meson subprojects download`.',
+  ]
+  foreach s : msg
+    warning(s)
+  endforeach
+
+  fourcc_h = files('subprojects/libdrm/include/drm/drm_fourcc.h')
+  inc += include_directories('subprojects/libdrm/include/drm')
+  libdrm = libdrm.partial_dependency(link_args: true)
+elif libdrm.type_name() == 'internal'
+  fourcc_h = files('subprojects/libdrm/include/drm/drm_fourcc.h')
+else
+  fourcc_h = files(libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h')
+endif
+
 python3 = import('python').find_installation()
-drm_fourcc_h_path = join_paths(libdrm.get_pkgconfig_variable('includedir'), 'libdrm/drm_fourcc.h')
-fourcc_py = join_paths(meson.source_root(), 'fourcc.py')
 
 tables_h = custom_target('tables_h',
   output : 'tables.h',
-  command : [python3, fourcc_py, drm_fourcc_h_path, '@OUTPUT@'])
+  command : [python3, files('fourcc.py'), fourcc_h, '@OUTPUT@'])
 
 executable('drm_info',
   [files('main.c', 'json.c', 'pretty.c'), tables_h],
+  include_directories: inc,
   dependencies: [libdrm, jsonc],
   install: true,
 )
