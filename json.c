@@ -13,8 +13,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#include "compat.h"
-#include "config.h"
 #include "drm_info.h"
 
 static const struct {
@@ -163,7 +161,6 @@ static struct json_object *device_info(int fd)
 		json_object_object_add(device_data_obj, "subsystem_device",
 			new_json_object_uint64(pci->subdevice_id));
 		break;
-#if LIBDRM_VERSION >= VERSION(2, 4, 75)
 	case DRM_BUS_PLATFORM:;
 		drmPlatformDeviceInfo *platform = dev->deviceinfo.platform;
 		device_data_obj = json_object_new_object();
@@ -173,7 +170,6 @@ static struct json_object *device_info(int fd)
 				json_object_new_string(platform->compatible[i]));
 		json_object_object_add(device_data_obj, "compatible", compatible_arr);
 		break;
-#endif
 	}
 	json_object_object_add(obj, "device_data", device_data_obj);
 
@@ -182,7 +178,6 @@ static struct json_object *device_info(int fd)
 	return obj;
 }
 
-#if LIBDRM_VERSION >= VERSION(2, 4, 83)
 static struct json_object *in_formats_info(int fd, uint32_t blob_id)
 {
 	struct json_object *arr = json_object_new_array();
@@ -218,15 +213,6 @@ static struct json_object *in_formats_info(int fd, uint32_t blob_id)
 
 	return arr;
 }
-#else
-static struct json_object *in_formats_info(int fd, uint32_t blob_id)
-{
-	(void)fd;
-	(void)blob_id;
-
-	return NULL;
-}
-#endif
 
 static struct json_object *mode_info(const drmModeModeInfo *mode)
 {
