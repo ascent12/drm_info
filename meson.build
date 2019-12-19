@@ -64,12 +64,12 @@ endif
 
 python3 = import('python').find_installation()
 
-tables_h = custom_target('tables_h',
-  output : 'tables.h',
+tables_c = custom_target('tables_c',
+  output : 'tables.c',
   command : [python3, files('fourcc.py'), fourcc_h, '@OUTPUT@'])
 
 executable('drm_info',
-  [files('main.c', 'json.c', 'pretty.c'), tables_h],
+  [files('main.c', 'json.c', 'pretty.c'), tables_c],
   include_directories: inc,
   dependencies: [libdrm, jsonc],
   install: true,
