@@ -11,6 +11,7 @@ project('drm_info', 'c',
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
+libpci = dependency('libpci', required: get_option('libpci'))
 libdrm = dependency('libdrm',
   fallback: ['libdrm', 'ext_libdrm'],
   default_options: [
@@ -62,6 +63,10 @@ else
   fourcc_h = files(libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h')
 endif
 
+if libpci.found()
+  add_project_arguments('-DHAVE_LIBPCI', language: 'c')
+endif
+
 python3 = import('python').find_installation()
 
 tables_c = custom_target('tables_c',
@@ -71,6 +76,6 @@ tables_c = custom_target('tables_c',
 executable('drm_info',
   [files('main.c', 'json.c', 'pretty.c'), tables_c],
   include_directories: inc,
-  dependencies: [libdrm, jsonc],
+  dependencies: [libdrm, libpci, jsonc],
   install: true,
 )

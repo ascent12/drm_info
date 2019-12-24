@@ -7,6 +7,10 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#ifdef HAVE_LIBPCI
+#include <pci/pci.h>
+#endif
+
 #include "drm_info.h"
 #include "tables.h"
 
@@ -96,6 +100,15 @@ static void print_device(struct json_object *obj)
 		uint16_t vendor = get_object_object_uint64(data_obj, "vendor");
 		uint16_t device = get_object_object_uint64(data_obj, "device");
 		printf(" %04x:%04x", vendor, device);
+#ifdef HAVE_LIBPCI
+		struct pci_access *pci = pci_alloc();
+		char name[512];
+		if (pci_lookup_name(pci, name, sizeof(name),
+				PCI_LOOKUP_VENDOR | PCI_LOOKUP_DEVICE, vendor, device)) {
+			printf(" %s", name);
+		}
+		pci_cleanup(pci);
+#endif
 		break;
 	case DRM_BUS_PLATFORM:;
 		struct json_object *compatible_arr =
