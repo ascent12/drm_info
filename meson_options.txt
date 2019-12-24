@@ -1,0 +1,5 @@
+option('libpci',
+  type: 'feature',
+  value: 'auto',
+  description: 'Print PCI device names via libpci'
+)
