@@ -317,6 +317,31 @@ static void print_path(struct json_object *obj, const char *prefix)
 	printf("%s" L_LAST "%s\n", prefix, json_object_get_string(obj));
 }
 
+static void print_fb(struct json_object *obj, const char *prefix)
+{
+	uint32_t id = get_object_object_uint64(obj, "id");
+	uint32_t width = get_object_object_uint64(obj, "width");
+	uint32_t height = get_object_object_uint64(obj, "height");
+
+	struct json_object *pitch_obj = json_object_object_get(obj, "pitch");
+	struct json_object *bpp_obj = json_object_object_get(obj, "bpp");
+	struct json_object *depth_obj = json_object_object_get(obj, "depth");
+	bool has_legacy = pitch_obj && bpp_obj && depth_obj;
+
+	printf("%s" L_VAL "Object ID: %"PRIu32"\n", prefix, id);
+	printf("%s%sSize: %"PRIu32"x%"PRIu32"\n", prefix,
+		has_legacy ? L_VAL : L_LAST, width, height);
+
+	if (has_legacy) {
+		printf("%s" L_VAL "Pitch: %"PRIu32"\n", prefix,
+			(uint32_t)get_object_uint64(pitch_obj));
+		printf("%s" L_VAL "Bits per pixel: %"PRIu32"\n", prefix,
+			(uint32_t)get_object_uint64(bpp_obj));
+		printf("%s" L_LAST "Depth: %"PRIu32"\n", prefix,
+			(uint32_t)get_object_uint64(depth_obj));
+	}
+}
+
 static void print_properties(struct json_object *obj, const char *prefix)
 {
 	printf("%s" L_LAST "Properties\n", prefix);
@@ -449,6 +474,10 @@ static void print_properties(struct json_object *obj, const char *prefix)
 		case DRM_MODE_PROP_OBJECT:;
 			uint32_t obj_type = get_object_uint64(spec_obj);
 			printf("object %s = %"PRIu64"\n", obj_str(obj_type), raw_val);
+			if (!data_obj)
+				break;
+			if (strcmp(prop_name, "FB_ID") == 0)
+				print_fb(data_obj, sub_prefix);
 			break;
 		case DRM_MODE_PROP_SIGNED_RANGE:;
 			int64_t smin =
