@@ -298,6 +298,29 @@ static struct json_object *path_info(int fd, uint32_t blob_id)
 	return obj;
 }
 
+static struct json_object *fb_info(int fd, uint32_t id)
+{
+	// TODO: use drmModeGetFB2: https://patchwork.freedesktop.org/series/67552/
+	drmModeFB *fb = drmModeGetFB(fd, id);
+	if (!fb) {
+		perror("drmModeGetFB");
+		return NULL;
+	}
+
+	struct json_object *obj = json_object_new_object();
+	json_object_object_add(obj, "id", new_json_object_uint64(fb->fb_id));
+	json_object_object_add(obj, "width", new_json_object_uint64(fb->width));
+	json_object_object_add(obj, "height", new_json_object_uint64(fb->height));
+
+	json_object_object_add(obj, "pitch", new_json_object_uint64(fb->pitch));
+	json_object_object_add(obj, "bpp", new_json_object_uint64(fb->bpp));
+	json_object_object_add(obj, "depth", new_json_object_uint64(fb->depth));
+
+	drmModeFreeFB(fb);
+
+	return obj;
+}
+
 
 static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 {
@@ -402,7 +425,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 			} else if (strcmp(prop->name, "WRITEBACK_PIXEL_FORMATS") == 0) {
 				data_obj = writeback_pixel_formats_info(fd, value);
 			} else if (strcmp(prop->name, "PATH") == 0) {
-				data_obj = path_info(fd, props->prop_values[i]);
+				data_obj = path_info(fd, value);
 			}
 			break;
 		case DRM_MODE_PROP_RANGE:
@@ -410,6 +433,14 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 			// in 16.16 fixed point
 			if (strncmp(prop->name, "SRC_", 4) == 0) {
 				data_obj = new_json_object_uint64(value >> 16);
+			}
+			break;
+		case DRM_MODE_PROP_OBJECT:
+			if (!value) {
+				break;
+			}
+			if (strcmp(prop->name, "FB_ID") == 0) {
+				data_obj = fb_info(fd, value);
 			}
 			break;
 		}
