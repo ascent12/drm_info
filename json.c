@@ -183,6 +183,10 @@ static struct json_object *in_formats_info(int fd, uint32_t blob_id)
 	struct json_object *arr = json_object_new_array();
 
 	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+	if (!blob) {
+		perror("drmModeGetPropertyBlob");
+		return NULL;
+	}
 
 	struct drm_format_modifier_blob *data = blob->data;
 
@@ -243,11 +247,11 @@ static struct json_object *mode_info(const drmModeModeInfo *mode)
 
 static struct json_object *mode_id_info(int fd, uint32_t blob_id)
 {
-	if (blob_id == 0) {
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+	if (!blob) {
+		perror("drmModeGetPropertyBlob");
 		return NULL;
 	}
-
-	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
 
 	drmModeModeInfo *mode = blob->data;
 
@@ -263,6 +267,10 @@ static struct json_object *writeback_pixel_formats_info(int fd, uint32_t blob_id
 	struct json_object *arr = json_object_new_array();
 
 	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+	if (!blob) {
+		perror("drmModeGetPropertyBlob");
+		return NULL;
+	}
 
 	uint32_t *fmts = blob->data;
 	uint32_t fmts_len = blob->length / sizeof(uint32_t);
@@ -277,11 +285,11 @@ static struct json_object *writeback_pixel_formats_info(int fd, uint32_t blob_id
 
 static struct json_object *path_info(int fd, uint32_t blob_id)
 {
-	if (blob_id == 0) {
+	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
+	if (!blob) {
+		perror("drmModeGetPropertyBlob");
 		return NULL;
 	}
-
-	drmModePropertyBlobRes *blob = drmModeGetPropertyBlob(fd, blob_id);
 
 	struct json_object *obj = json_object_new_string_len(blob->data, blob->length);
 
