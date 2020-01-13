@@ -1,5 +1,5 @@
 project('drm_info', 'c',
-  version: '2.1.0',
+  version: '2.2.0',
   license: 'MIT',
   meson_version: '>=0.49.0',
   default_options: [
