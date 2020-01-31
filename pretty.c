@@ -91,6 +91,9 @@ static const char *bustype_str(int type)
 
 static void print_device(struct json_object *obj)
 {
+	if (!obj)
+		return;
+
 	int bus_type = get_object_object_uint64(obj, "bus_type");
 	struct json_object *data_obj = json_object_object_get(obj, "device_data");
 
