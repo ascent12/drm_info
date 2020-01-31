@@ -100,18 +100,24 @@ static void print_device(struct json_object *obj)
 	printf(L_VAL "Device: %s", bustype_str(bus_type));
 	switch (bus_type) {
 	case DRM_BUS_PCI:;
-		uint16_t vendor = get_object_object_uint64(data_obj, "vendor");
-		uint16_t device = get_object_object_uint64(data_obj, "device");
-		printf(" %04x:%04x", vendor, device);
+		uint16_t pci_vendor = get_object_object_uint64(data_obj, "vendor");
+		uint16_t pci_device = get_object_object_uint64(data_obj, "device");
+		printf(" %04x:%04x", pci_vendor, pci_device);
 #ifdef HAVE_LIBPCI
 		struct pci_access *pci = pci_alloc();
 		char name[512];
 		if (pci_lookup_name(pci, name, sizeof(name),
-				PCI_LOOKUP_VENDOR | PCI_LOOKUP_DEVICE, vendor, device)) {
+				PCI_LOOKUP_VENDOR | PCI_LOOKUP_DEVICE,
+				pci_vendor, pci_device)) {
 			printf(" %s", name);
 		}
 		pci_cleanup(pci);
 #endif
+		break;
+	case DRM_BUS_USB:;
+		uint16_t usb_vendor = get_object_object_uint64(data_obj, "vendor");
+		uint16_t usb_product = get_object_object_uint64(data_obj, "product");
+		printf(" %04x:%04x", usb_vendor, usb_product);
 		break;
 	case DRM_BUS_PLATFORM:;
 		struct json_object *compatible_arr =
