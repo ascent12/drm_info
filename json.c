@@ -161,6 +161,14 @@ static struct json_object *device_info(int fd)
 		json_object_object_add(device_data_obj, "subsystem_device",
 			new_json_object_uint64(pci->subdevice_id));
 		break;
+	case DRM_BUS_USB:;
+		drmUsbDeviceInfo *usb = dev->deviceinfo.usb;
+		device_data_obj = json_object_new_object();
+		json_object_object_add(device_data_obj, "vendor",
+			new_json_object_uint64(usb->vendor));
+		json_object_object_add(device_data_obj, "product",
+			new_json_object_uint64(usb->product));
+		break;
 	case DRM_BUS_PLATFORM:;
 		drmPlatformDeviceInfo *platform = dev->deviceinfo.platform;
 		device_data_obj = json_object_new_object();
