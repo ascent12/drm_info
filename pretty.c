@@ -348,19 +348,32 @@ static void print_fb(struct json_object *obj, const char *prefix)
 	struct json_object *pitch_obj = json_object_object_get(obj, "pitch");
 	struct json_object *bpp_obj = json_object_object_get(obj, "bpp");
 	struct json_object *depth_obj = json_object_object_get(obj, "depth");
+	struct json_object *format_obj = json_object_object_get(obj, "format");
+	struct json_object *modifier_obj = json_object_object_get(obj, "modifier");
 	bool has_legacy = pitch_obj && bpp_obj && depth_obj;
 
 	printf("%s" L_VAL "Object ID: %"PRIu32"\n", prefix, id);
 	printf("%s%sSize: %"PRIu32"x%"PRIu32"\n", prefix,
-		has_legacy ? L_VAL : L_LAST, width, height);
+		(has_legacy || format_obj) ? L_VAL : L_LAST,
+		width, height);
 
 	if (has_legacy) {
 		printf("%s" L_VAL "Pitch: %"PRIu32"\n", prefix,
 			(uint32_t)get_object_uint64(pitch_obj));
 		printf("%s" L_VAL "Bits per pixel: %"PRIu32"\n", prefix,
 			(uint32_t)get_object_uint64(bpp_obj));
-		printf("%s" L_LAST "Depth: %"PRIu32"\n", prefix,
+		printf("%s%sDepth: %"PRIu32"\n", prefix, format_obj ? L_VAL : L_LAST,
 			(uint32_t)get_object_uint64(depth_obj));
+	}
+	if (format_obj) {
+		uint32_t fmt = (uint32_t)get_object_uint64(format_obj);
+		printf("%s%sFormat: %s (0x%08"PRIx32")\n", prefix,
+			modifier_obj ? L_VAL : L_LAST, format_str(fmt), fmt);
+	}
+	if (modifier_obj) {
+		uint64_t mod = get_object_uint64(modifier_obj);
+		printf("%s" L_LAST "Modifier: %s (0x%"PRIx64")\n", prefix,
+			modifier_str(mod), mod);
 	}
 }
 

@@ -8,6 +8,8 @@ project('drm_info', 'c',
   ],
 )
 
+cc = meson.get_compiler('c')
+
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
@@ -65,6 +67,10 @@ endif
 
 if libpci.found()
   add_project_arguments('-DHAVE_LIBPCI', language: 'c')
+endif
+
+if cc.has_function('drmModeGetFB2', dependencies: [libdrm])
+  add_project_arguments('-DHAVE_GETFB2', language: 'c')
 endif
 
 python3 = import('python').find_installation()

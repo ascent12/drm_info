@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -308,7 +309,46 @@ static struct json_object *path_info(int fd, uint32_t blob_id)
 
 static struct json_object *fb_info(int fd, uint32_t id)
 {
-	// TODO: use drmModeGetFB2: https://patchwork.freedesktop.org/series/67552/
+#ifdef HAVE_GETFB2
+	drmModeFB2 *fb2 = drmModeGetFB2(fd, id);
+	if (!fb2 && errno != EINVAL) {
+		perror("drmModeGetFB2");
+		return NULL;
+	}
+	if (fb2) {
+		struct json_object *obj = json_object_new_object();
+		json_object_object_add(obj, "id", new_json_object_uint64(fb2->fb_id));
+		json_object_object_add(obj, "width", new_json_object_uint64(fb2->width));
+		json_object_object_add(obj, "height", new_json_object_uint64(fb2->height));
+
+		json_object_object_add(obj, "format", new_json_object_uint64(fb2->pixel_format));
+		if (fb2->flags & DRM_MODE_FB_MODIFIERS) {
+			json_object_object_add(obj, "modifier", new_json_object_uint64(fb2->modifier));
+		}
+
+		struct json_object *planes_arr = json_object_new_array();
+		json_object_object_add(obj, "planes", planes_arr);
+
+		for (size_t i = 0; i < sizeof(fb2->pitches) / sizeof(fb2->pitches[0]); i++) {
+			if (!fb2->pitches[i])
+				continue;
+
+			struct json_object *plane_obj = json_object_new_object();
+			json_object_array_add(planes_arr, plane_obj);
+
+			json_object_object_add(plane_obj, "offset",
+				new_json_object_uint64(fb2->offsets[i]));
+			json_object_object_add(plane_obj, "pitch",
+				new_json_object_uint64(fb2->pitches[i]));
+		}
+
+		drmModeFreeFB2(fb2);
+
+		return obj;
+	}
+#endif
+
+	// Fallback to drmModeGetFB is drmModeGetFB2 isn't available
 	drmModeFB *fb = drmModeGetFB(fd, id);
 	if (!fb) {
 		perror("drmModeGetFB");
@@ -320,6 +360,7 @@ static struct json_object *fb_info(int fd, uint32_t id)
 	json_object_object_add(obj, "width", new_json_object_uint64(fb->width));
 	json_object_object_add(obj, "height", new_json_object_uint64(fb->height));
 
+	// Legacy properties
 	json_object_object_add(obj, "pitch", new_json_object_uint64(fb->pitch));
 	json_object_object_add(obj, "bpp", new_json_object_uint64(fb->bpp));
 	json_object_object_add(obj, "depth", new_json_object_uint64(fb->depth));
