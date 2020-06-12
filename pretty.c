@@ -316,6 +316,20 @@ static void print_in_formats(struct json_object *arr, const char *prefix)
 	}
 }
 
+static void print_hdr_output_metadata(struct json_object *arr, const char *prefix)
+{
+	struct json_object_iter iter;
+	json_object_object_foreachC(arr, iter) {
+		if (iter.val) {
+			printf("%s%s\"%s\" = %"PRIu64"\n",
+				prefix,
+				!iter.entry->next ? L_LINE L_LAST : L_LINE L_VAL,
+				iter.key,
+				get_object_uint64(iter.val));
+		}
+	}
+}
+
 static void print_mode_id(struct json_object *obj, const char *prefix)
 {
 	printf("%s" L_LAST, prefix);
@@ -467,6 +481,8 @@ static void print_properties(struct json_object *obj, const char *prefix)
 				break;
 			if (strcmp(prop_name, "IN_FORMATS") == 0)
 				print_in_formats(data_obj, sub_prefix);
+			else if (strcmp(prop_name, "HDR_OUTPUT_METADATA") == 0)
+				print_hdr_output_metadata(data_obj, sub_prefix);
 			else if (strcmp(prop_name, "MODE_ID") == 0)
 				print_mode_id(data_obj, sub_prefix);
 			else if (strcmp(prop_name, "WRITEBACK_PIXEL_FORMATS") == 0)
