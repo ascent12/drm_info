@@ -17,8 +17,9 @@
 #include "drm_info.h"
 
 // HDR definitions copied from linux/include/uapi/drm/drm_mode.h
+#ifndef HAVE_DRM_HDR_OUTPUT_METADATA
 
-struct hdr_metadata_infoframe {
+struct drm_hdr_metadata_infoframe {
   uint8_t eotf;
   uint8_t metadata_type;
   struct {
@@ -33,12 +34,14 @@ struct hdr_metadata_infoframe {
   uint16_t max_fall;
 };
 
-struct hdr_output_metadata {
+struct drm_hdr_output_metadata {
   uint32_t metadata_type;
   union {
-    struct hdr_metadata_infoframe hdmi_metadata_type1;
+    struct drm_hdr_metadata_infoframe hdmi_metadata_type1;
   };
 };
+
+#endif  // HAVE_DRM_HDR_OUTPUT_METADATA
 
 static const struct {
 	const char *name;
@@ -303,25 +306,27 @@ static struct json_object *hdr_output_metadata_info(int fd, uint32_t blob_id)
 		return NULL;
 	}
 
-	struct hdr_output_metadata *meta = blob->data;
+	struct drm_hdr_output_metadata *meta = blob->data;
 
 	struct json_object *obj = json_object_new_object();
 	json_object_object_add(obj, "type", new_json_object_uint64(meta->metadata_type));
-	const struct hdr_metadata_infoframe* info = &meta->hdmi_metadata_type1;
-	json_object_object_add(obj, "eotf", new_json_object_uint64(info->eotf));
-	json_object_object_add(obj, "metadata_type", new_json_object_uint64(info->metadata_type));
-	json_object_object_add(obj, "display_primaries_r_x", new_json_object_uint64(info->display_primaries[0].x));
-	json_object_object_add(obj, "display_primaries_r_y", new_json_object_uint64(info->display_primaries[0].y));
-	json_object_object_add(obj, "display_primaries_g_x", new_json_object_uint64(info->display_primaries[1].x));
-	json_object_object_add(obj, "display_primaries_g_y", new_json_object_uint64(info->display_primaries[1].y));
-	json_object_object_add(obj, "display_primaries_b_x", new_json_object_uint64(info->display_primaries[2].x));
-	json_object_object_add(obj, "display_primaries_b_y", new_json_object_uint64(info->display_primaries[2].y));
-	json_object_object_add(obj, "white_point_x", new_json_object_uint64(info->white_point.x));
-	json_object_object_add(obj, "white_point_y", new_json_object_uint64(info->white_point.y));
-	json_object_object_add(obj, "max_display_mastering_luminance", new_json_object_uint64(info->max_display_mastering_luminance));
-	json_object_object_add(obj, "min_display_mastering_luminance", new_json_object_uint64(info->min_display_mastering_luminance));
-	json_object_object_add(obj, "max_cll", new_json_object_uint64(info->max_cll));
-	json_object_object_add(obj, "max_fall", new_json_object_uint64(info->max_fall));
+	if (meta->metadata_type == 1 /*HDMI_STATIC_METADATA_TYPE1*/) {
+		const struct drm_hdr_metadata_infoframe* info = &meta->hdmi_metadata_type1;
+		json_object_object_add(obj, "eotf", new_json_object_uint64(info->eotf));
+		json_object_object_add(obj, "metadata_type", new_json_object_uint64(info->metadata_type));
+		json_object_object_add(obj, "display_primaries_r_x", new_json_object_uint64(info->display_primaries[0].x));
+		json_object_object_add(obj, "display_primaries_r_y", new_json_object_uint64(info->display_primaries[0].y));
+		json_object_object_add(obj, "display_primaries_g_x", new_json_object_uint64(info->display_primaries[1].x));
+		json_object_object_add(obj, "display_primaries_g_y", new_json_object_uint64(info->display_primaries[1].y));
+		json_object_object_add(obj, "display_primaries_b_x", new_json_object_uint64(info->display_primaries[2].x));
+		json_object_object_add(obj, "display_primaries_b_y", new_json_object_uint64(info->display_primaries[2].y));
+		json_object_object_add(obj, "white_point_x", new_json_object_uint64(info->white_point.x));
+		json_object_object_add(obj, "white_point_y", new_json_object_uint64(info->white_point.y));
+		json_object_object_add(obj, "max_display_mastering_luminance", new_json_object_uint64(info->max_display_mastering_luminance));
+		json_object_object_add(obj, "min_display_mastering_luminance", new_json_object_uint64(info->min_display_mastering_luminance));
+		json_object_object_add(obj, "max_cll", new_json_object_uint64(info->max_cll));
+		json_object_object_add(obj, "max_fall", new_json_object_uint64(info->max_fall));
+	}
 
 	drmModeFreePropertyBlob(blob);
 	return obj;
