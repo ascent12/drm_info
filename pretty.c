@@ -105,6 +105,7 @@ static void print_device(struct json_object *obj)
 		printf(" %04x:%04x", pci_vendor, pci_device);
 #ifdef HAVE_LIBPCI
 		struct pci_access *pci = pci_alloc();
+		pci_init(pci);
 		char name[512];
 		if (pci_lookup_name(pci, name, sizeof(name),
 				PCI_LOOKUP_VENDOR | PCI_LOOKUP_DEVICE,
