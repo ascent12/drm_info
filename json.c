@@ -760,8 +760,10 @@ struct json_object *drm_info(char *paths[])
 
 			const char *path = dev->nodes[DRM_NODE_PRIMARY];
 			struct json_object *dev_obj = node_info(path);
-			if (!dev_obj)
+			if (!dev_obj) {
+				fprintf(stderr, "Failed to retrieve information from %s\n", path);
 				continue;
+			}
 
 			json_object_object_add(obj, path, dev_obj);
 		}
