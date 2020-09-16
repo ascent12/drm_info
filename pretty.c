@@ -751,6 +751,11 @@ static void print_crtcs(struct json_object *arr)
 			printf("\n");
 		}
 
+		struct json_object *gamma_size_obj =
+			json_object_object_get(obj, "gamma_size");
+		printf(L_LINE "%s" L_VAL "Gamma size: %d\n",
+			last ? L_GAP : L_LINE, json_object_get_int(gamma_size_obj));
+
 		print_properties(props_obj, last ? L_LINE L_GAP : L_LINE L_LINE);
 	}
 }
