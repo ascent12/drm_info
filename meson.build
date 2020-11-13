@@ -80,7 +80,7 @@ tables_c = custom_target('tables_c',
   command : [python3, files('fourcc.py'), fourcc_h, '@OUTPUT@'])
 
 executable('drm_info',
-  [files('main.c', 'json.c', 'pretty.c'), tables_c],
+  [files('main.c', 'modifiers.c', 'json.c', 'pretty.c'), tables_c],
   include_directories: inc,
   dependencies: [libdrm, libpci, jsonc],
   install: true,

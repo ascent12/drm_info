@@ -12,6 +12,7 @@
 #endif
 
 #include "drm_info.h"
+#include "modifiers.h"
 #include "tables.h"
 
 #define L_LINE "│   "
@@ -305,8 +306,9 @@ static void print_in_formats(struct json_object *arr, const char *prefix)
 		struct json_object *formats_arr =
 			json_object_object_get(mod_obj, "formats");
 
-		printf("%s%s%s (0x%"PRIx64")\n", prefix, last ? L_LAST : L_VAL,
-			modifier_str(mod), mod);
+		printf("%s%s", prefix, last ? L_LAST : L_VAL);
+		print_modifier(mod);
+		printf("\n");
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
 			uint32_t fmt = get_object_uint64(
@@ -375,8 +377,9 @@ static void print_fb(struct json_object *obj, const char *prefix)
 	}
 	if (modifier_obj) {
 		uint64_t mod = get_object_uint64(modifier_obj);
-		printf("%s%sModifier: %s (0x%"PRIx64")\n", prefix,
-			planes_arr ? L_VAL : L_LAST, modifier_str(mod), mod);
+		printf("%s%sModifier: ", prefix, planes_arr ? L_VAL : L_LAST);
+		print_modifier(mod);
+		printf("\n");
 	}
 	if (planes_arr) {
 		printf("%s" L_LAST "Planes:\n", prefix);

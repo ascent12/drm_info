@@ -56,7 +56,7 @@ const char *format_str(uint32_t format)
 	}
 }
 
-const char *modifier_str(uint64_t modifier)
+const char *basic_modifier_str(uint64_t modifier)
 {
 	switch (modifier) {
 ''')
