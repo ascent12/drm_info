@@ -351,6 +351,7 @@ static void print_fb(struct json_object *obj, const char *prefix)
 	struct json_object *depth_obj = json_object_object_get(obj, "depth");
 	struct json_object *format_obj = json_object_object_get(obj, "format");
 	struct json_object *modifier_obj = json_object_object_get(obj, "modifier");
+	struct json_object *planes_arr = json_object_object_get(obj, "planes");
 	bool has_legacy = pitch_obj && bpp_obj && depth_obj;
 
 	printf("%s" L_VAL "Object ID: %"PRIu32"\n", prefix, id);
@@ -367,14 +368,28 @@ static void print_fb(struct json_object *obj, const char *prefix)
 			(uint32_t)get_object_uint64(depth_obj));
 	}
 	if (format_obj) {
+		bool last = !modifier_obj && !planes_arr;
 		uint32_t fmt = (uint32_t)get_object_uint64(format_obj);
 		printf("%s%sFormat: %s (0x%08"PRIx32")\n", prefix,
-			modifier_obj ? L_VAL : L_LAST, format_str(fmt), fmt);
+			last ? L_LAST : L_VAL, format_str(fmt), fmt);
 	}
 	if (modifier_obj) {
 		uint64_t mod = get_object_uint64(modifier_obj);
-		printf("%s" L_LAST "Modifier: %s (0x%"PRIx64")\n", prefix,
-			modifier_str(mod), mod);
+		printf("%s%sModifier: %s (0x%"PRIx64")\n", prefix,
+			planes_arr ? L_VAL : L_LAST, modifier_str(mod), mod);
+	}
+	if (planes_arr) {
+		printf("%s" L_LAST "Planes:\n", prefix);
+		for (size_t i = 0; i < json_object_array_length(planes_arr); ++i) {
+			bool last = i == json_object_array_length(planes_arr) - 1;
+			struct json_object *plane_obj =
+				json_object_array_get_idx(planes_arr, i);
+			uint64_t offset = get_object_object_uint64(plane_obj, "offset");
+			uint64_t pitch = get_object_object_uint64(plane_obj, "pitch");
+			printf("%s" L_GAP "%sPlane %zu: "
+				"offset = %"PRIu64", pitch = %"PRIu64"\n",
+				prefix, last ? L_LAST : L_LINE, i, offset, pitch);
+		}
 	}
 }
 
