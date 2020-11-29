@@ -1,6 +1,6 @@
 # drm_info
 
-[![builds.sr.ht status](https://builds.sr.ht/~ascent/drm_info.svg)](https://builds.sr.ht/~ascent/drm_info?)
+[![builds.sr.ht status](https://builds.sr.ht/~ascent/drm_info/commits.svg)](https://builds.sr.ht/~ascent/drm_info/commits?)
 
 Small utility to dump info about DRM devices.
 
