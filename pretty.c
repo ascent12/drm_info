@@ -512,7 +512,8 @@ static void print_properties(struct json_object *obj, const char *prefix)
 					get_object_object_string(item_obj, "name");
 				uint64_t item_value =
 					get_object_object_uint64(item_obj, "value");
-				if ((item_value & raw_val) != item_value) {
+				uint64_t item_bit = 1 << item_value;
+				if ((item_bit & raw_val) != item_bit) {
 					continue;
 				}
 
