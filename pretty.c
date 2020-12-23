@@ -90,11 +90,37 @@ static const char *bustype_str(int type)
 	}
 }
 
+static const char *node_type_str(int type)
+{
+	switch (type) {
+	case DRM_NODE_PRIMARY:
+		return "primary";
+	case DRM_NODE_CONTROL:
+		return "control";
+	case DRM_NODE_RENDER:
+		return "render";
+	default:
+		return "unknown";
+	}
+}
+
+static void print_available_nodes(int available_nodes)
+{
+	bool first = true;
+	for (int i = 0; i < DRM_NODE_MAX; i++) {
+		if (!(available_nodes & (1 << i)))
+			continue;
+		printf("%s%s", first ? "" : ", ", node_type_str(i));
+		first = false;
+	}
+}
+
 static void print_device(struct json_object *obj)
 {
 	if (!obj)
 		return;
 
+	int available_nodes = get_object_object_uint64(obj, "available_nodes");
 	int bus_type = get_object_object_uint64(obj, "bus_type");
 	struct json_object *data_obj = json_object_object_get(obj, "device_data");
 
@@ -130,6 +156,10 @@ static void print_device(struct json_object *obj)
 		}
 		break;
 	}
+	printf("\n");
+
+	printf(L_LINE L_LAST "Available nodes: ");
+	print_available_nodes(available_nodes);
 	printf("\n");
 }
 

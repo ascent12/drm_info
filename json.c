@@ -145,6 +145,8 @@ static struct json_object *device_info(int fd)
 	}
 
 	struct json_object *obj = json_object_new_object();
+	json_object_object_add(obj, "available_nodes",
+		new_json_object_uint64(dev->available_nodes));
 	json_object_object_add(obj, "bus_type",
 		new_json_object_uint64(dev->bustype));
 
