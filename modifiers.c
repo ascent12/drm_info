@@ -131,6 +131,25 @@ static void print_amd_modifier(uint64_t mod) {
 	printf(")");
 }
 
+static const char *amlogic_layout_str(uint64_t layout) {
+	switch (layout) {
+	case AMLOGIC_FBC_LAYOUT_BASIC:
+		return "BASIC";
+	case AMLOGIC_FBC_LAYOUT_SCATTER:
+		return "SCATTER";
+	}
+	return "Unknown";
+}
+
+static void print_amlogic_modifier(uint64_t mod) {
+	uint64_t layout = mod & 0xFF;
+	uint64_t options = (mod >> 8) & 0xFF;
+
+	printf("AMLOGIC_FBC(layout = %s, options = %s)",
+		amlogic_layout_str(layout),
+		(options & AMLOGIC_FBC_OPTION_MEM_SAVING) ? "MEM_SAVING" : "0");
+}
+
 static uint8_t mod_vendor(uint64_t mod) {
 	return (uint8_t)(mod >> 56);
 }
@@ -142,6 +161,9 @@ void print_modifier(uint64_t mod) {
 		break;
 	case DRM_FORMAT_MOD_VENDOR_AMD:
 		print_amd_modifier(mod);
+		break;
+	case DRM_FORMAT_MOD_VENDOR_AMLOGIC:
+		print_amlogic_modifier(mod);
 		break;
 	default:
 		printf("%s", basic_modifier_str(mod));
