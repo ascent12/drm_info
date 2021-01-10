@@ -22,8 +22,8 @@ def afbc_print(f, l):
 
 info = {
 	'fmt': r'^#define (\w+)\s*(?:\\$\s*)?fourcc_code',
-	'basic_pre': r'\bI915_FORMAT_MOD_\w+\b',
-	'basic_post': r'\b(DRM_FORMAT_MOD_(?:INVALID|LINEAR|SAMSUNG|QCOM|VIVANTE|NVIDIA|BROADCOM|ALLWINNER)\w*)\s',
+	'basic_pre': r'^#define (I915_FORMAT_MOD_\w+)\b',
+	'basic_post': r'^#define (DRM_FORMAT_MOD_(?:INVALID|LINEAR|SAMSUNG|QCOM|VIVANTE|NVIDIA|BROADCOM|ALLWINNER)\w*)\s',
 	'afbc_block': r'\bAFBC_FORMAT_MOD_BLOCK_SIZE(?:_\d+x\d+)+\b',
 	'afbc_bitmask': r'\bAFBC_FORMAT_MOD_[A-Z]+\b',
 }
