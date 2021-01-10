@@ -69,7 +69,7 @@ if libpci.found()
   add_project_arguments('-DHAVE_LIBPCI', language: 'c')
 endif
 
-if cc.has_function('drmModeGetFB2', dependencies: [libdrm])
+if libdrm.type_name() == 'internal' or cc.has_function('drmModeGetFB2', dependencies: [libdrm])
   add_project_arguments('-DHAVE_GETFB2', language: 'c')
 endif
 
