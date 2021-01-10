@@ -131,6 +131,71 @@ static void print_amd_modifier(uint64_t mod) {
 	printf(")");
 }
 
+static const char *arm_afbc_block_size_str(uint64_t block_size) {
+	switch (block_size) {
+	case AFBC_FORMAT_MOD_BLOCK_SIZE_16x16:
+		return "16x16";
+	case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8:
+		return "32x8";
+	case AFBC_FORMAT_MOD_BLOCK_SIZE_64x4:
+		return "64x4";
+	case AFBC_FORMAT_MOD_BLOCK_SIZE_32x8_64x4:
+		return "32x8_64x4";
+	}
+	return "Unknown";
+}
+
+static void print_arm_modifier(uint64_t mod) {
+	uint64_t type = (mod >> 52) & 0xF;
+	uint64_t value = mod & 0x000FFFFFFFFFFFFFULL;
+
+	switch (type) {
+	case DRM_FORMAT_MOD_ARM_TYPE_AFBC:;
+		uint64_t block_size = value & AFBC_FORMAT_MOD_BLOCK_SIZE_MASK;
+		printf("ARM_AFBC(BLOCK_SIZE = %s", arm_afbc_block_size_str(block_size));
+		if (value & AFBC_FORMAT_MOD_YTR) {
+			printf(", YTR");
+		}
+		if (value & AFBC_FORMAT_MOD_SPLIT) {
+			printf(", SPLIT");
+		}
+		if (value & AFBC_FORMAT_MOD_SPARSE) {
+			printf(", SPARSE");
+		}
+		if (value & AFBC_FORMAT_MOD_CBR) {
+			printf(", CBR");
+		}
+		if (value & AFBC_FORMAT_MOD_TILED) {
+			printf(", TILED");
+		}
+		if (value & AFBC_FORMAT_MOD_SC) {
+			printf(", SC");
+		}
+		if (value & AFBC_FORMAT_MOD_DB) {
+			printf(", DB");
+		}
+		if (value & AFBC_FORMAT_MOD_BCH) {
+			printf(", BCH");
+		}
+		if (value & AFBC_FORMAT_MOD_USM) {
+			printf(", USM");
+		}
+		printf(")");
+		break;
+	case DRM_FORMAT_MOD_ARM_TYPE_MISC:
+		switch (mod) {
+		case DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED:
+			printf("ARM_16X16_BLOCK_U_INTERLEAVED");
+			break;
+		default:
+			printf("ARM_MISC(unknown)");
+		}
+		break;
+	default:
+		printf("ARM(unknown)");
+	}
+}
+
 static uint8_t mod_vendor(uint64_t mod) {
 	return (uint8_t)(mod >> 56);
 }
@@ -142,6 +207,9 @@ void print_modifier(uint64_t mod) {
 		break;
 	case DRM_FORMAT_MOD_VENDOR_AMD:
 		print_amd_modifier(mod);
+		break;
+	case DRM_FORMAT_MOD_VENDOR_ARM:
+		print_arm_modifier(mod);
 		break;
 	default:
 		printf("%s", basic_modifier_str(mod));
