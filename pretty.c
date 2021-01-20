@@ -20,11 +20,6 @@
 #define L_LAST "└───"
 #define L_GAP  "    "
 
-static uint64_t get_object_uint64(struct json_object *obj)
-{
-	return (uint64_t)json_object_get_int64(obj);
-}
-
 static const char *get_object_object_string(struct json_object *obj,
 		const char *key)
 {
@@ -42,7 +37,7 @@ static uint64_t get_object_object_uint64(struct json_object *obj,
 	if (!uint64_obj) {
 		return 0;
 	}
-	return get_object_uint64(uint64_obj);
+	return json_object_get_uint64(uint64_obj);
 }
 
 static void print_driver(struct json_object *obj)
@@ -74,7 +69,7 @@ static void print_driver(struct json_object *obj)
 			printf("DRM_CAP_%s not supported\n", iter.key);
 		} else {
 			printf("DRM_CAP_%s = %"PRIu64"\n", iter.key,
-				get_object_uint64(iter.val));
+				json_object_get_uint64(iter.val));
 		}
 	}
 }
@@ -341,7 +336,7 @@ static void print_in_formats(struct json_object *arr, const char *prefix)
 		printf("\n");
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
-			uint32_t fmt = get_object_uint64(
+			uint32_t fmt = json_object_get_uint64(
 				json_object_array_get_idx(formats_arr, j));
 			printf("%s%s%s%s (0x%08"PRIx32")\n", prefix, last ? L_GAP : L_LINE,
 				fmt_last ? L_LAST : L_VAL, format_str(fmt), fmt);
@@ -361,7 +356,7 @@ static void print_writeback_pixel_formats(struct json_object *arr,
 {
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
 		bool last = i == json_object_array_length(arr) - 1;
-		uint32_t fmt = get_object_uint64(json_object_array_get_idx(arr, i));
+		uint32_t fmt = json_object_get_uint64(json_object_array_get_idx(arr, i));
 		printf("%s%s%s (0x%08"PRIx32")\n", prefix, last ? L_LAST : L_VAL,
 			format_str(fmt), fmt);
 	}
@@ -393,20 +388,20 @@ static void print_fb(struct json_object *obj, const char *prefix)
 
 	if (has_legacy) {
 		printf("%s" L_VAL "Pitch: %"PRIu32" bytes\n", prefix,
-			(uint32_t)get_object_uint64(pitch_obj));
+			(uint32_t)json_object_get_uint64(pitch_obj));
 		printf("%s" L_VAL "Bits per pixel: %"PRIu32"\n", prefix,
-			(uint32_t)get_object_uint64(bpp_obj));
+			(uint32_t)json_object_get_uint64(bpp_obj));
 		printf("%s%sDepth: %"PRIu32"\n", prefix, format_obj ? L_VAL : L_LAST,
-			(uint32_t)get_object_uint64(depth_obj));
+			(uint32_t)json_object_get_uint64(depth_obj));
 	}
 	if (format_obj) {
 		bool last = !modifier_obj && !planes_arr;
-		uint32_t fmt = (uint32_t)get_object_uint64(format_obj);
+		uint32_t fmt = (uint32_t)json_object_get_uint64(format_obj);
 		printf("%s%sFormat: %s (0x%08"PRIx32")\n", prefix,
 			last ? L_LAST : L_VAL, format_str(fmt), fmt);
 	}
 	if (modifier_obj) {
-		uint64_t mod = get_object_uint64(modifier_obj);
+		uint64_t mod = json_object_get_uint64(modifier_obj);
 		printf("%s%sModifier: ", prefix, planes_arr ? L_VAL : L_LAST);
 		print_modifier(mod);
 		printf("\n");
@@ -479,9 +474,9 @@ static void print_properties(struct json_object *obj, const char *prefix)
 				printf("%"PRIu64"]", max);
 
 			if (data_obj != NULL)
-				printf(" = %"PRIu64"\n", get_object_uint64(data_obj));
+				printf(" = %"PRIu64"\n", json_object_get_uint64(data_obj));
 			else
-				printf(" = %"PRIu64"\n", get_object_uint64(val_obj));
+				printf(" = %"PRIu64"\n", json_object_get_uint64(val_obj));
 			break;
 		case DRM_MODE_PROP_ENUM:
 			printf("enum {");
@@ -557,7 +552,7 @@ static void print_properties(struct json_object *obj, const char *prefix)
 			printf(")\n");
 			break;
 		case DRM_MODE_PROP_OBJECT:;
-			uint32_t obj_type = get_object_uint64(spec_obj);
+			uint32_t obj_type = json_object_get_uint64(spec_obj);
 			printf("object %s = %"PRIu64"\n", obj_str(obj_type), raw_val);
 			if (!data_obj)
 				break;
@@ -706,7 +701,7 @@ static void print_connectors(struct json_object *arr,
 		bool first = true;
 		printf(L_LINE "%s" L_VAL "Encoders: {", last ? L_GAP : L_LINE);
 		for (size_t j = 0; j < json_object_array_length(encs_arr); ++j) {
-			uint32_t enc_id = get_object_uint64(
+			uint32_t enc_id = json_object_get_uint64(
 				json_object_array_get_idx(encs_arr, j));
 			printf("%s%zi", first ? "" : ", ",
 				find_encoder_index(encoders_arr, enc_id));
@@ -845,7 +840,7 @@ static void print_planes(struct json_object *arr)
 
 		printf("%s" L_LINE L_LAST "Formats:\n", prefix);
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
-			uint32_t fmt = get_object_uint64(
+			uint32_t fmt = json_object_get_uint64(
 				json_object_array_get_idx(formats_arr, j));
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
 
