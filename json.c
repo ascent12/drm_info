@@ -47,27 +47,6 @@ static const struct {
 	{ "SYNCOBJ_TIMELINE", DRM_CAP_SYNCOBJ_TIMELINE },
 };
 
-static int json_object_uint_to_json_string(struct json_object *obj,
-		struct printbuf *pb, int level, int flags)
-{
-	(void)level;
-	(void)flags;
-
-	uint64_t u = (uint64_t)json_object_get_int64(obj);
-
-	char buf[21]; // 20 digits + NULL byte
-	int len = snprintf(buf, sizeof(buf), "%" PRIu64, u);
-
-	return printbuf_memappend(pb, buf, len);
-}
-
-static struct json_object *new_json_object_uint64(uint64_t u)
-{
-	struct json_object *obj = json_object_new_int64((int64_t)u);
-	json_object_set_serializer(obj, json_object_uint_to_json_string, NULL, NULL);
-	return obj;
-}
-
 static struct json_object *kernel_info(void)
 {
 	struct utsname utsname;
@@ -127,7 +106,7 @@ static struct json_object *driver_info(int fd)
 		struct json_object *cap_obj = NULL;
 		uint64_t cap;
 		if (drmGetCap(fd, caps[i].cap, &cap) == 0) {
-			cap_obj = json_object_new_int64(cap);
+			cap_obj = json_object_new_uint64(cap);
 		}
 		json_object_object_add(caps_obj, caps[i].name, cap_obj);
 	}
@@ -146,9 +125,9 @@ static struct json_object *device_info(int fd)
 
 	struct json_object *obj = json_object_new_object();
 	json_object_object_add(obj, "available_nodes",
-		new_json_object_uint64(dev->available_nodes));
+		json_object_new_uint64(dev->available_nodes));
 	json_object_object_add(obj, "bus_type",
-		new_json_object_uint64(dev->bustype));
+		json_object_new_uint64(dev->bustype));
 
 	struct json_object *device_data_obj = NULL;
 	switch (dev->bustype) {
@@ -156,21 +135,21 @@ static struct json_object *device_info(int fd)
 		drmPciDeviceInfo *pci = dev->deviceinfo.pci;
 		device_data_obj = json_object_new_object();
 		json_object_object_add(device_data_obj, "vendor",
-			new_json_object_uint64(pci->vendor_id));
+			json_object_new_uint64(pci->vendor_id));
 		json_object_object_add(device_data_obj, "device",
-			new_json_object_uint64(pci->device_id));
+			json_object_new_uint64(pci->device_id));
 		json_object_object_add(device_data_obj, "subsystem_vendor",
-			new_json_object_uint64(pci->subvendor_id));
+			json_object_new_uint64(pci->subvendor_id));
 		json_object_object_add(device_data_obj, "subsystem_device",
-			new_json_object_uint64(pci->subdevice_id));
+			json_object_new_uint64(pci->subdevice_id));
 		break;
 	case DRM_BUS_USB:;
 		drmUsbDeviceInfo *usb = dev->deviceinfo.usb;
 		device_data_obj = json_object_new_object();
 		json_object_object_add(device_data_obj, "vendor",
-			new_json_object_uint64(usb->vendor));
+			json_object_new_uint64(usb->vendor));
 		json_object_object_add(device_data_obj, "product",
-			new_json_object_uint64(usb->product));
+			json_object_new_uint64(usb->product));
 		break;
 	case DRM_BUS_PLATFORM:;
 		drmPlatformDeviceInfo *platform = dev->deviceinfo.platform;
@@ -210,13 +189,13 @@ static struct json_object *in_formats_info(int fd, uint32_t blob_id)
 	for (uint32_t i = 0; i < data->count_modifiers; ++i) {
 		struct json_object *mod_obj = json_object_new_object();
 		json_object_object_add(mod_obj, "modifier",
-			new_json_object_uint64(mods[i].modifier));
+			json_object_new_uint64(mods[i].modifier));
 
 		struct json_object *fmts_arr = json_object_new_array();
 		for (uint64_t j = 0; j < 64; ++j) {
 			if (mods[i].formats & (1ull << j)) {
 				uint32_t fmt = fmts[j + mods[i].offset];
-				json_object_array_add(fmts_arr, new_json_object_uint64(fmt));
+				json_object_array_add(fmts_arr, json_object_new_uint64(fmt));
 			}
 		}
 		json_object_object_add(mod_obj, "formats", fmts_arr);
@@ -233,24 +212,24 @@ static struct json_object *mode_info(const drmModeModeInfo *mode)
 {
 	struct json_object *obj = json_object_new_object();
 
-	json_object_object_add(obj, "clock", new_json_object_uint64(mode->clock));
+	json_object_object_add(obj, "clock", json_object_new_uint64(mode->clock));
 
-	json_object_object_add(obj, "hdisplay", new_json_object_uint64(mode->hdisplay));
-	json_object_object_add(obj, "hsync_start", new_json_object_uint64(mode->hsync_start));
-	json_object_object_add(obj, "hsync_end", new_json_object_uint64(mode->hsync_end));
-	json_object_object_add(obj, "htotal", new_json_object_uint64(mode->htotal));
-	json_object_object_add(obj, "hskew", new_json_object_uint64(mode->hskew));
+	json_object_object_add(obj, "hdisplay", json_object_new_uint64(mode->hdisplay));
+	json_object_object_add(obj, "hsync_start", json_object_new_uint64(mode->hsync_start));
+	json_object_object_add(obj, "hsync_end", json_object_new_uint64(mode->hsync_end));
+	json_object_object_add(obj, "htotal", json_object_new_uint64(mode->htotal));
+	json_object_object_add(obj, "hskew", json_object_new_uint64(mode->hskew));
 
-	json_object_object_add(obj, "vdisplay", new_json_object_uint64(mode->vdisplay));
-	json_object_object_add(obj, "vsync_start", new_json_object_uint64(mode->vsync_start));
-	json_object_object_add(obj, "vsync_end", new_json_object_uint64(mode->vsync_end));
-	json_object_object_add(obj, "vtotal", new_json_object_uint64(mode->vtotal));
-	json_object_object_add(obj, "vscan", new_json_object_uint64(mode->vscan));
+	json_object_object_add(obj, "vdisplay", json_object_new_uint64(mode->vdisplay));
+	json_object_object_add(obj, "vsync_start", json_object_new_uint64(mode->vsync_start));
+	json_object_object_add(obj, "vsync_end", json_object_new_uint64(mode->vsync_end));
+	json_object_object_add(obj, "vtotal", json_object_new_uint64(mode->vtotal));
+	json_object_object_add(obj, "vscan", json_object_new_uint64(mode->vscan));
 
-	json_object_object_add(obj, "vrefresh", new_json_object_uint64(mode->vrefresh));
+	json_object_object_add(obj, "vrefresh", json_object_new_uint64(mode->vrefresh));
 
-	json_object_object_add(obj, "flags", new_json_object_uint64(mode->flags));
-	json_object_object_add(obj, "type", new_json_object_uint64(mode->type));
+	json_object_object_add(obj, "flags", json_object_new_uint64(mode->flags));
+	json_object_object_add(obj, "type", json_object_new_uint64(mode->type));
 	json_object_object_add(obj, "name", json_object_new_string(mode->name));
 
 	return obj;
@@ -286,7 +265,7 @@ static struct json_object *writeback_pixel_formats_info(int fd, uint32_t blob_id
 	uint32_t *fmts = blob->data;
 	uint32_t fmts_len = blob->length / sizeof(uint32_t);
 	for (uint32_t i = 0; i < fmts_len; ++i) {
-		json_object_array_add(arr, new_json_object_uint64(fmts[i]));
+		json_object_array_add(arr, json_object_new_uint64(fmts[i]));
 	}
 
 	drmModeFreePropertyBlob(blob);
@@ -319,13 +298,13 @@ static struct json_object *fb_info(int fd, uint32_t id)
 	}
 	if (fb2) {
 		struct json_object *obj = json_object_new_object();
-		json_object_object_add(obj, "id", new_json_object_uint64(fb2->fb_id));
-		json_object_object_add(obj, "width", new_json_object_uint64(fb2->width));
-		json_object_object_add(obj, "height", new_json_object_uint64(fb2->height));
+		json_object_object_add(obj, "id", json_object_new_uint64(fb2->fb_id));
+		json_object_object_add(obj, "width", json_object_new_uint64(fb2->width));
+		json_object_object_add(obj, "height", json_object_new_uint64(fb2->height));
 
-		json_object_object_add(obj, "format", new_json_object_uint64(fb2->pixel_format));
+		json_object_object_add(obj, "format", json_object_new_uint64(fb2->pixel_format));
 		if (fb2->flags & DRM_MODE_FB_MODIFIERS) {
-			json_object_object_add(obj, "modifier", new_json_object_uint64(fb2->modifier));
+			json_object_object_add(obj, "modifier", json_object_new_uint64(fb2->modifier));
 		}
 
 		struct json_object *planes_arr = json_object_new_array();
@@ -339,9 +318,9 @@ static struct json_object *fb_info(int fd, uint32_t id)
 			json_object_array_add(planes_arr, plane_obj);
 
 			json_object_object_add(plane_obj, "offset",
-				new_json_object_uint64(fb2->offsets[i]));
+				json_object_new_uint64(fb2->offsets[i]));
 			json_object_object_add(plane_obj, "pitch",
-				new_json_object_uint64(fb2->pitches[i]));
+				json_object_new_uint64(fb2->pitches[i]));
 		}
 
 		drmModeFreeFB2(fb2);
@@ -358,14 +337,14 @@ static struct json_object *fb_info(int fd, uint32_t id)
 	}
 
 	struct json_object *obj = json_object_new_object();
-	json_object_object_add(obj, "id", new_json_object_uint64(fb->fb_id));
-	json_object_object_add(obj, "width", new_json_object_uint64(fb->width));
-	json_object_object_add(obj, "height", new_json_object_uint64(fb->height));
+	json_object_object_add(obj, "id", json_object_new_uint64(fb->fb_id));
+	json_object_object_add(obj, "width", json_object_new_uint64(fb->width));
+	json_object_object_add(obj, "height", json_object_new_uint64(fb->height));
 
 	// Legacy properties
-	json_object_object_add(obj, "pitch", new_json_object_uint64(fb->pitch));
-	json_object_object_add(obj, "bpp", new_json_object_uint64(fb->bpp));
-	json_object_object_add(obj, "depth", new_json_object_uint64(fb->depth));
+	json_object_object_add(obj, "pitch", json_object_new_uint64(fb->pitch));
+	json_object_object_add(obj, "bpp", json_object_new_uint64(fb->bpp));
+	json_object_object_add(obj, "depth", json_object_new_uint64(fb->depth));
 
 	drmModeFreeFB(fb);
 
@@ -399,26 +378,26 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 
 		struct json_object *prop_obj = json_object_new_object();
 		json_object_object_add(prop_obj, "id",
-			new_json_object_uint64(prop->prop_id));
+			json_object_new_uint64(prop->prop_id));
 		json_object_object_add(prop_obj, "flags",
-			new_json_object_uint64(flags));
-		json_object_object_add(prop_obj, "type", new_json_object_uint64(type));
+			json_object_new_uint64(flags));
+		json_object_object_add(prop_obj, "type", json_object_new_uint64(type));
 		json_object_object_add(prop_obj, "atomic",
 			json_object_new_boolean(atomic));
 		json_object_object_add(prop_obj, "immutable",
 			json_object_new_boolean(immutable));
 
 		json_object_object_add(prop_obj, "raw_value",
-			new_json_object_uint64(value));
+			json_object_new_uint64(value));
 
 		struct json_object *spec_obj = NULL;
 		switch (type) {
 		case DRM_MODE_PROP_RANGE:
 			spec_obj = json_object_new_object();
 			json_object_object_add(spec_obj, "min",
-				new_json_object_uint64(prop->values[0]));
+				json_object_new_uint64(prop->values[0]));
 			json_object_object_add(spec_obj, "max",
-				new_json_object_uint64(prop->values[1]));
+				json_object_new_uint64(prop->values[1]));
 			break;
 		case DRM_MODE_PROP_ENUM:
 		case DRM_MODE_PROP_BITMASK:
@@ -428,12 +407,12 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 				json_object_object_add(item_obj, "name",
 					json_object_new_string(prop->enums[j].name));
 				json_object_object_add(item_obj, "value",
-					new_json_object_uint64(prop->enums[j].value));
+					json_object_new_uint64(prop->enums[j].value));
 				json_object_array_add(spec_obj, item_obj);
 			}
 			break;
 		case DRM_MODE_PROP_OBJECT:
-			spec_obj = new_json_object_uint64(prop->values[0]);
+			spec_obj = json_object_new_uint64(prop->values[0]);
 			break;
 		case DRM_MODE_PROP_SIGNED_RANGE:
 			spec_obj = json_object_new_object();
@@ -451,7 +430,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 		case DRM_MODE_PROP_ENUM:
 		case DRM_MODE_PROP_BITMASK:
 		case DRM_MODE_PROP_OBJECT:
-			value_obj = new_json_object_uint64(value);
+			value_obj = json_object_new_uint64(value);
 			break;
 		case DRM_MODE_PROP_BLOB:
 			// TODO: base64-encode blob contents
@@ -483,7 +462,7 @@ static struct json_object *properties_info(int fd, uint32_t id, uint32_t type)
 			// This is a special case, as the SRC_* properties are
 			// in 16.16 fixed point
 			if (strncmp(prop->name, "SRC_", 4) == 0) {
-				data_obj = new_json_object_uint64(value >> 16);
+				data_obj = json_object_new_uint64(value >> 16);
 			}
 			break;
 		case DRM_MODE_PROP_OBJECT:
@@ -521,24 +500,24 @@ static struct json_object *connectors_info(int fd, drmModeRes *res)
 		struct json_object *conn_obj = json_object_new_object();
 
 		json_object_object_add(conn_obj, "id",
-			new_json_object_uint64(conn->connector_id));
+			json_object_new_uint64(conn->connector_id));
 		json_object_object_add(conn_obj, "type",
-			new_json_object_uint64(conn->connector_type));
+			json_object_new_uint64(conn->connector_type));
 		json_object_object_add(conn_obj, "status",
-			new_json_object_uint64(conn->connection));
+			json_object_new_uint64(conn->connection));
 		json_object_object_add(conn_obj, "phy_width",
-			new_json_object_uint64(conn->mmWidth));
+			json_object_new_uint64(conn->mmWidth));
 		json_object_object_add(conn_obj, "phy_height",
-			new_json_object_uint64(conn->mmHeight));
+			json_object_new_uint64(conn->mmHeight));
 		json_object_object_add(conn_obj, "subpixel",
-			new_json_object_uint64(conn->subpixel));
+			json_object_new_uint64(conn->subpixel));
 		json_object_object_add(conn_obj, "encoder_id",
-			new_json_object_uint64(conn->encoder_id));
+			json_object_new_uint64(conn->encoder_id));
 
 		struct json_object *encoders_arr = json_object_new_array();
 		for (int j = 0; j < conn->count_encoders; ++j) {
 			json_object_array_add(encoders_arr,
-				new_json_object_uint64(conn->encoders[j]));
+				json_object_new_uint64(conn->encoders[j]));
 		}
 		json_object_object_add(conn_obj, "encoders", encoders_arr);
 
@@ -575,15 +554,15 @@ static struct json_object *encoders_info(int fd, drmModeRes *res)
 		struct json_object *enc_obj = json_object_new_object();
 
 		json_object_object_add(enc_obj, "id",
-			new_json_object_uint64(enc->encoder_id));
+			json_object_new_uint64(enc->encoder_id));
 		json_object_object_add(enc_obj, "type",
-			new_json_object_uint64(enc->encoder_type));
+			json_object_new_uint64(enc->encoder_type));
 		json_object_object_add(enc_obj, "crtc_id",
-			new_json_object_uint64(enc->crtc_id));
+			json_object_new_uint64(enc->crtc_id));
 		json_object_object_add(enc_obj, "possible_crtcs",
-			new_json_object_uint64(enc->possible_crtcs));
+			json_object_new_uint64(enc->possible_crtcs));
 		json_object_object_add(enc_obj, "possible_clones",
-			new_json_object_uint64(enc->possible_clones));
+			json_object_new_uint64(enc->possible_clones));
 
 		drmModeFreeEncoder(enc);
 
@@ -607,13 +586,13 @@ static struct json_object *crtcs_info(int fd, drmModeRes *res)
 		struct json_object *crtc_obj = json_object_new_object();
 
 		json_object_object_add(crtc_obj, "id",
-			new_json_object_uint64(crtc->crtc_id));
+			json_object_new_uint64(crtc->crtc_id));
 		json_object_object_add(crtc_obj, "fb_id",
-			new_json_object_uint64(crtc->buffer_id));
+			json_object_new_uint64(crtc->buffer_id));
 		json_object_object_add(crtc_obj, "x",
-			new_json_object_uint64(crtc->x));
+			json_object_new_uint64(crtc->x));
 		json_object_object_add(crtc_obj, "y",
-			new_json_object_uint64(crtc->y));
+			json_object_new_uint64(crtc->y));
 		if (crtc->mode_valid) {
 			json_object_object_add(crtc_obj, "mode", mode_info(&crtc->mode));
 		} else {
@@ -654,23 +633,23 @@ static struct json_object *planes_info(int fd)
 		struct json_object *plane_obj = json_object_new_object();
 
 		json_object_object_add(plane_obj, "id",
-			new_json_object_uint64(plane->plane_id));
+			json_object_new_uint64(plane->plane_id));
 		json_object_object_add(plane_obj, "possible_crtcs",
-			new_json_object_uint64(plane->possible_crtcs));
+			json_object_new_uint64(plane->possible_crtcs));
 		json_object_object_add(plane_obj, "crtc_id",
-			new_json_object_uint64(plane->crtc_id));
+			json_object_new_uint64(plane->crtc_id));
 		json_object_object_add(plane_obj, "fb_id",
-			new_json_object_uint64(plane->fb_id));
+			json_object_new_uint64(plane->fb_id));
 		json_object_object_add(plane_obj, "crtc_x",
-			new_json_object_uint64(plane->crtc_x));
+			json_object_new_uint64(plane->crtc_x));
 		json_object_object_add(plane_obj, "crtc_y",
-			new_json_object_uint64(plane->crtc_y));
+			json_object_new_uint64(plane->crtc_y));
 		json_object_object_add(plane_obj, "x",
-			new_json_object_uint64(plane->x));
+			json_object_new_uint64(plane->x));
 		json_object_object_add(plane_obj, "y",
-			new_json_object_uint64(plane->y));
+			json_object_new_uint64(plane->y));
 		json_object_object_add(plane_obj, "gamma_size",
-			new_json_object_uint64(plane->gamma_size));
+			json_object_new_uint64(plane->gamma_size));
 
 		json_object_object_add(plane_obj, "fb",
 			plane->fb_id ? fb_info(fd, plane->fb_id) : NULL);
@@ -678,7 +657,7 @@ static struct json_object *planes_info(int fd)
 		struct json_object *formats_arr = json_object_new_array();
 		for (uint32_t j = 0; j < plane->count_formats; ++j) {
 			json_object_array_add(formats_arr,
-				new_json_object_uint64(plane->formats[j]));
+				json_object_new_uint64(plane->formats[j]));
 		}
 		json_object_object_add(plane_obj, "formats", formats_arr);
 
@@ -722,13 +701,13 @@ static struct json_object *node_info(const char *path)
 
 	struct json_object *fb_size_obj = json_object_new_object();
 	json_object_object_add(fb_size_obj, "min_width",
-		new_json_object_uint64(res->min_width));
+		json_object_new_uint64(res->min_width));
 	json_object_object_add(fb_size_obj, "max_width",
-		new_json_object_uint64(res->max_width));
+		json_object_new_uint64(res->max_width));
 	json_object_object_add(fb_size_obj, "min_height",
-		new_json_object_uint64(res->min_height));
+		json_object_new_uint64(res->min_height));
 	json_object_object_add(fb_size_obj, "max_height",
-		new_json_object_uint64(res->max_height));
+		json_object_new_uint64(res->max_height));
 	json_object_object_add(obj, "fb_size", fb_size_obj);
 
 	json_object_object_add(obj, "connectors", connectors_info(fd, res));
