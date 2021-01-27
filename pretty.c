@@ -818,6 +818,8 @@ static void print_planes(struct json_object *arr)
 
 		uint32_t id = get_object_object_uint64(obj, "id");
 		uint32_t crtcs = get_object_object_uint64(obj, "possible_crtcs");
+		uint32_t fb_id = get_object_object_uint64(obj, "fb_id");
+		struct json_object *fb_obj = json_object_object_get(obj, "fb");
 		struct json_object *formats_arr = json_object_object_get(obj, "formats");
 		struct json_object *props_obj = json_object_object_get(obj, "properties");
 
@@ -828,6 +830,12 @@ static void print_planes(struct json_object *arr)
 		printf(L_GAP "%s" L_VAL "CRTCs: ", last ? L_GAP : L_LINE);
 		print_bitmask(crtcs);
 		printf("\n");
+
+		printf(L_GAP "%s" L_VAL "FB ID: %"PRIu32"\n",
+			last ? L_GAP : L_LINE, fb_id);
+		if (fb_obj) {
+			print_fb(fb_obj, last ? L_GAP L_GAP L_LINE : L_GAP L_LINE L_LINE);
+		}
 
 		printf(L_GAP "%s" L_VAL "Formats:\n", last ? L_GAP : L_LINE);
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {

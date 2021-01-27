@@ -672,6 +672,9 @@ static struct json_object *planes_info(int fd)
 		json_object_object_add(plane_obj, "gamma_size",
 			new_json_object_uint64(plane->gamma_size));
 
+		json_object_object_add(plane_obj, "fb",
+			plane->fb_id ? fb_info(fd, plane->fb_id) : NULL);
+
 		struct json_object *formats_arr = json_object_new_array();
 		for (uint32_t j = 0; j < plane->count_formats; ++j) {
 			json_object_array_add(formats_arr,
