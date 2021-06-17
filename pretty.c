@@ -421,7 +421,7 @@ static void print_fb(struct json_object *obj, const char *prefix)
 			uint64_t pitch = get_object_object_uint64(plane_obj, "pitch");
 			printf("%s" L_GAP "%sPlane %zu: "
 				"offset = %"PRIu64", pitch = %"PRIu64"\n",
-				prefix, last ? L_LAST : L_LINE, i, offset, pitch);
+				prefix, last ? L_LAST : L_VAL, i, offset, pitch);
 		}
 	}
 }
