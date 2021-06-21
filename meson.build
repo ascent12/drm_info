@@ -12,7 +12,7 @@ cc = meson.get_compiler('c')
 
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
-jsonc = dependency('json-c', version: '>=0.13', fallback: ['json-c', 'json_c'])
+jsonc = dependency('json-c', version: '>=0.14', fallback: ['json-c', 'json_c'])
 libpci = dependency('libpci', required: get_option('libpci'))
 libdrm = dependency('libdrm',
   fallback: ['libdrm', 'ext_libdrm'],
