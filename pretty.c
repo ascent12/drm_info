@@ -392,7 +392,7 @@ static void print_fb(struct json_object *obj, const char *prefix)
 		width, height);
 
 	if (has_legacy) {
-		printf("%s" L_VAL "Pitch: %"PRIu32"\n", prefix,
+		printf("%s" L_VAL "Pitch: %"PRIu32" bytes\n", prefix,
 			(uint32_t)get_object_uint64(pitch_obj));
 		printf("%s" L_VAL "Bits per pixel: %"PRIu32"\n", prefix,
 			(uint32_t)get_object_uint64(bpp_obj));
@@ -420,7 +420,7 @@ static void print_fb(struct json_object *obj, const char *prefix)
 			uint64_t offset = get_object_object_uint64(plane_obj, "offset");
 			uint64_t pitch = get_object_object_uint64(plane_obj, "pitch");
 			printf("%s" L_GAP "%sPlane %zu: "
-				"offset = %"PRIu64", pitch = %"PRIu64"\n",
+				"offset = %"PRIu64", pitch = %"PRIu64" bytes\n",
 				prefix, last ? L_LAST : L_VAL, i, offset, pitch);
 		}
 	}
