@@ -512,9 +512,9 @@ static struct json_object *connectors_info(int fd, drmModeRes *res)
 	struct json_object *arr = json_object_new_array();
 
 	for (int i = 0; i < res->count_connectors; ++i) {
-		drmModeConnector *conn = drmModeGetConnector(fd, res->connectors[i]);
+		drmModeConnector *conn = drmModeGetConnectorCurrent(fd, res->connectors[i]);
 		if (!conn) {
-			perror("drmModeGetConnector");
+			perror("drmModeGetConnectorCurrent");
 			continue;
 		}
 
