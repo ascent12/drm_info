@@ -784,28 +784,30 @@ static void print_crtcs(struct json_object *arr)
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
 		struct json_object *obj = json_object_array_get_idx(arr, i);
 		bool last = i == json_object_array_length(arr) - 1;
+		const char *prefix = last ? L_LINE L_GAP : L_LINE L_LINE;
 
 		uint32_t id = get_object_object_uint64(obj, "id");
 		struct json_object *props_obj = json_object_object_get(obj, "properties");
 
 		printf(L_LINE "%sCRTC %zu\n", last ? L_LAST : L_VAL, i);
 
-		printf(L_LINE "%s" L_VAL "Object ID: %"PRIu32"\n",
-			last ? L_GAP : L_LINE, id);
+		printf("%s" L_VAL "Object ID: %"PRIu32"\n", prefix, id);
+
+		printf("%s" L_VAL "Legacy info\n", prefix);
 
 		struct json_object *mode_obj = json_object_object_get(obj, "mode");
 		if (mode_obj) {
-			printf(L_LINE "%s" L_VAL "Mode: ", last ? L_GAP : L_LINE);
+			printf("%s" L_LINE L_VAL "Mode: ", prefix);
 			print_mode(mode_obj);
 			printf("\n");
 		}
 
 		struct json_object *gamma_size_obj =
 			json_object_object_get(obj, "gamma_size");
-		printf(L_LINE "%s" L_VAL "Gamma size: %d\n",
-			last ? L_GAP : L_LINE, json_object_get_int(gamma_size_obj));
+		printf("%s" L_LINE L_LAST "Gamma size: %d\n", prefix,
+			json_object_get_int(gamma_size_obj));
 
-		print_properties(props_obj, last ? L_LINE L_GAP : L_LINE L_LINE);
+		print_properties(props_obj, prefix);
 	}
 }
 
@@ -815,6 +817,7 @@ static void print_planes(struct json_object *arr)
 	for (size_t i = 0; i < json_object_array_length(arr); ++i) {
 		struct json_object *obj = json_object_array_get_idx(arr, i);
 		bool last = i == json_object_array_length(arr) - 1;
+		const char *prefix = last ? L_GAP L_GAP : L_GAP L_LINE;
 
 		uint32_t id = get_object_object_uint64(obj, "id");
 		uint32_t crtcs = get_object_object_uint64(obj, "possible_crtcs");
@@ -825,30 +828,33 @@ static void print_planes(struct json_object *arr)
 
 		printf(L_GAP "%sPlane %zu\n", last ? L_LAST : L_VAL, i);
 
-		printf(L_GAP "%s" L_VAL "Object ID: %"PRIu32"\n",
-			last ? L_GAP : L_LINE, id);
-		printf(L_GAP "%s" L_VAL "CRTCs: ", last ? L_GAP : L_LINE);
+		printf("%s" L_VAL "Object ID: %"PRIu32"\n", prefix, id);
+		printf("%s" L_VAL "CRTCs: ", prefix);
 		print_bitmask(crtcs);
 		printf("\n");
 
-		printf(L_GAP "%s" L_VAL "FB ID: %"PRIu32"\n",
-			last ? L_GAP : L_LINE, fb_id);
+		printf("%s" L_VAL "Legacy info\n", prefix);
+
+		char sub_prefix[strlen(prefix) + 2 * strlen(L_LINE) + 1];
+		snprintf(sub_prefix, sizeof(sub_prefix), "%s" L_LINE L_LINE, prefix);
+
+		printf("%s" L_LINE L_VAL "FB ID: %"PRIu32"\n", prefix, fb_id);
 		if (fb_obj) {
-			print_fb(fb_obj, last ? L_GAP L_GAP L_LINE : L_GAP L_LINE L_LINE);
+			print_fb(fb_obj, sub_prefix);
 		}
 
-		printf(L_GAP "%s" L_VAL "Formats:\n", last ? L_GAP : L_LINE);
+		printf("%s" L_LINE L_LAST "Formats:\n", prefix);
 		for (size_t j = 0; j < json_object_array_length(formats_arr); ++j) {
 			uint32_t fmt = get_object_uint64(
 				json_object_array_get_idx(formats_arr, j));
 			bool fmt_last = j == json_object_array_length(formats_arr) - 1;
 
-			printf(L_GAP "%s" L_LINE "%s%s (0x%08"PRIx32")\n", last ? L_GAP : L_LINE,
+			printf("%s" L_LINE L_GAP "%s%s (0x%08"PRIx32")\n", prefix,
 				fmt_last ? L_LAST : L_VAL,
 				format_str(fmt), fmt);
 		}
 
-		print_properties(props_obj, last ? L_GAP L_GAP : L_GAP L_LINE);
+		print_properties(props_obj, prefix);
 	}
 }
 
