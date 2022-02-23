@@ -62,7 +62,8 @@ if libdrm.version().version_compare('<2.4.104')
 elif libdrm.type_name() == 'internal'
   fourcc_h = files('subprojects/libdrm/include/drm/drm_fourcc.h')
 else
-  fourcc_h = files(libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h')
+  fourcc_h = files(libdrm.get_pkgconfig_variable('pc_sysrootdir') +
+    libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h')
 endif
 
 if libpci.found()
