@@ -3,3 +3,8 @@ option('libpci',
   value: 'auto',
   description: 'Print PCI device names via libpci'
 )
+option('man-pages',
+  type: 'feature',
+  value: 'auto',
+  description: 'Generate and install man pages'
+)
