@@ -85,3 +85,26 @@ executable('drm_info',
   dependencies: [libdrm, libpci, jsonc],
   install: true,
 )
+
+scdoc = dependency('scdoc', native: true, required: get_option('man-pages'))
+if scdoc.found()
+  man_pages = ['drm_info.1.scd']
+  sh = find_program('sh', native: true)
+
+  foreach src : man_pages
+    topic = src.split('.')[0]
+    section = src.split('.')[1]
+    output = topic + '.' + section
+
+    custom_target(
+      output,
+      input: files(src),
+      output: output,
+      command: [
+        sh, '-c', '@0@ < @INPUT@ > @1@'.format(scdoc.get_pkgconfig_variable('scdoc'), output)
+      ],
+      install: true,
+      install_dir: get_option('mandir') / 'man' + section
+    )
+  endforeach
+endif
