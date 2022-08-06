@@ -3,6 +3,7 @@ packages:
   - libdrm-dev
   - meson
   - pkgconf
+  - scdoc
 sources:
   - https://github.com/ascent12/drm_info
 tasks:
