@@ -17,21 +17,20 @@ libpci = dependency('libpci', required: get_option('libpci'))
 libdrm = dependency('libdrm',
   fallback: ['libdrm', 'ext_libdrm'],
   default_options: [
-    'libkms=false',
-    'intel=false',
-    'radeon=false',
-    'amdgpu=false',
-    'nouveau=false',
-    'vmwgfx=false',
-    'omap=false',
-    'exynos=false',
-    'freedreno=false',
-    'tegra=false',
-    'vc4=false',
-    'etnaviv=false',
-    'cairo-tests=false',
-    'man-pages=false',
-    'valgrind=false',
+    'intel=disabled',
+    'radeon=disabled',
+    'amdgpu=disabled',
+    'nouveau=disabled',
+    'vmwgfx=disabled',
+    'omap=disabled',
+    'exynos=disabled',
+    'freedreno=disabled',
+    'tegra=disabled',
+    'vc4=disabled',
+    'etnaviv=disabled',
+    'cairo-tests=disabled',
+    'man-pages=disabled',
+    'valgrind=disabled',
   ],
 )
 
@@ -42,7 +41,7 @@ inc = []
 #
 # We need to make sure we don't use any new libdrm functions, but those
 # are added very infrequently, so this is unlikely to be an issue.
-if libdrm.version().version_compare('<2.4.104')
+if libdrm.version().version_compare('<2.4.113')
   if libdrm.type_name() == 'internal'
     error('libdrm subproject out of date. Run `meson subprojects update`.')
   endif
