@@ -56,13 +56,13 @@ if libdrm.version().version_compare('<2.4.104')
     warning(s)
   endforeach
 
-  fourcc_h = files('subprojects/libdrm/include/drm/drm_fourcc.h')
+  fourcc_h = meson.current_source_dir() / 'subprojects/libdrm/include/drm/drm_fourcc.h'
   inc += include_directories('subprojects/libdrm/include/drm')
   libdrm = libdrm.partial_dependency(link_args: true)
 elif libdrm.type_name() == 'internal'
-  fourcc_h = files('subprojects/libdrm/include/drm/drm_fourcc.h')
+  fourcc_h = meson.current_source_dir() / 'subprojects/libdrm/include/drm/drm_fourcc.h'
 else
-  fourcc_h = files(libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h')
+  fourcc_h = libdrm.get_pkgconfig_variable('includedir') / 'libdrm/drm_fourcc.h'
 endif
 
 if libpci.found()
