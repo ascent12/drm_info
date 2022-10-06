@@ -145,6 +145,18 @@ static const char *arm_afbc_block_size_str(uint64_t block_size) {
 	return "Unknown";
 }
 
+static const char *arm_afrc_cu_size_str(uint64_t cu_size) {
+	switch (cu_size) {
+	case AFRC_FORMAT_MOD_CU_SIZE_16:
+		return "16";
+	case AFRC_FORMAT_MOD_CU_SIZE_24:
+		return "24";
+	case AFRC_FORMAT_MOD_CU_SIZE_32:
+		return "32";
+	}
+	return "Unknown";
+}
+
 static void print_arm_modifier(uint64_t mod) {
 	uint64_t type = (mod >> 52) & 0xF;
 	uint64_t value = mod & 0x000FFFFFFFFFFFFFULL;
@@ -190,6 +202,18 @@ static void print_arm_modifier(uint64_t mod) {
 		default:
 			printf("ARM_MISC(unknown)");
 		}
+		break;
+	case DRM_FORMAT_MOD_ARM_TYPE_AFRC:
+		uint64_t cu_size_p0 = value & AFRC_FORMAT_MOD_CU_SIZE_MASK;
+		uint64_t cu_size_p12 = (value >> 4) & AFRC_FORMAT_MOD_CU_SIZE_MASK;
+		printf("ARM_AFRC(");
+		printf("CU_SIZE_P0 = %s", arm_afrc_cu_size_str(cu_size_p0));
+		printf(", CU_SIZE_P12 = %s", arm_afrc_cu_size_str(cu_size_p12));
+		if (value & AFRC_FORMAT_MOD_LAYOUT_SCAN)
+			printf(", SCAN");
+		else
+			printf(", ROT");
+		printf(")");
 		break;
 	default:
 		printf("ARM(unknown)");
