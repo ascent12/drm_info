@@ -2,6 +2,10 @@
 
 [![builds.sr.ht status](https://builds.sr.ht/~ascent/drm_info/commits.svg)](https://builds.sr.ht/~ascent/drm_info/commits?)
 
+> ### ⚠️ Migrated to gitlab.freedesktop.org
+>
+> This project has [migrated to gitlab.freedesktop.org](https://gitlab.freedesktop.org/emersion/drm_info).
+
 Small utility to dump info about DRM devices.
 
 Requires libdrm and json-c.
