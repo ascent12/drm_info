@@ -8,6 +8,9 @@ project('drm_info', 'c',
   ],
 )
 
+warning('Heads up! This project has migrated to gitlab.freedesktop.org:')
+warning('https://gitlab.freedesktop.org/emersion/drm_info')
+
 cc = meson.get_compiler('c')
 
 add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
