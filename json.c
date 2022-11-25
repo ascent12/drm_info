@@ -692,7 +692,15 @@ static struct json_object *node_info(const char *path)
 	json_object_object_add(obj, "device", device_info(fd));
 
 	drmModeRes *res = drmModeGetResources(fd);
-	if (!res) {
+	if (!res && errno == EOPNOTSUPP) {
+		// Some DRM devices don't have resources
+		json_object_object_add(obj, "connectors", json_object_new_array());
+		json_object_object_add(obj, "encoders", json_object_new_array());
+		json_object_object_add(obj, "crtcs", json_object_new_array());
+		json_object_object_add(obj, "planes", json_object_new_array());
+		close(fd);
+		return obj;
+	} else if (!res) {
 		perror("drmModeGetResources");
 		close(fd);
 		json_object_put(obj);
