@@ -75,6 +75,10 @@ if libdrm.type_name() == 'internal' or cc.has_function('drmModeGetFB2', dependen
   add_project_arguments('-DHAVE_GETFB2', language: 'c')
 endif
 
+if cc.has_header_symbol('drm_mode.h', 'drm_hdr_output_metadata', dependencies: [libdrm])
+  add_project_arguments('-DHAVE_DRM_HDR_OUTPUT_METADATA', language: 'c')
+endif
+
 python3 = import('python').find_installation()
 
 tables_c = custom_target('tables_c',
